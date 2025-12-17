@@ -1,0 +1,64 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Diet History - Admin{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>Diet History - {{ user.name }}</h3>
+  <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-secondary btn-sm">Back</a>
+</div>
+
+<!-- ===================== CHART ===================== -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card shadow-sm">
+      <div class="card-header">Calorie Intake per Day</div>
+      <div class="card-body">
+        <canvas id="calorieTrend"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TABLE ===================== -->
+<div class="table-responsive">
+  <table class="table table-striped align-middle shadow-sm">
+    <thead class="table-dark">
+      <tr>
+        <th>Date</th>
+        <th>Calorie Intake</th>
+        <th>Target</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for d in diets %}
+      <tr>
+        <td>{{ d.record_date.isoformat() if d.record_date else '' }}</td>
+        <td>{{ d.calorie_intake or '-' }}</td>
+        <td>{{ d.daily_calorie_target or '-' }}</td>
+        <td>{{ d.notes or '' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="4" class="text-center text-muted">No diet records</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== DATA FOR CHART ===================== -->
+<!-- <script>
+  const calorieTrend = {{ calorie_trend | tojson }};
+</script> -->
+
+ 
+
+<!-- ===================== CHART.JS + SCRIPT ===================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% endblock %}

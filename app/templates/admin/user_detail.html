@@ -1,0 +1,71 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}User Detail - Admin{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>User Detail: {{ user.name }}</h3>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-sm">Back</a>
+</div>
+
+<div class="row mb-3">
+  <!-- ===================== LEFT COLUMN ===================== -->
+  <div class="col-md-4">
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">Profile</div>
+      <div class="card-body">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Height:</strong> {{ user.height_cm or '-' }} cm</p>
+        <p><strong>Weight:</strong> {{ user.weight_kg or '-' }} kg</p>
+        <p><strong>BMI:</strong> {{ user.bmi or '-' }}</p>
+        <p><strong>Posture:</strong> {{ user.posture_category or '-' }}</p>
+        <p><strong>Activity:</strong> {{ user.activity_level or '-' }}</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header">Summary</div>
+      <div class="card-body">
+        <p><strong>Target Weight:</strong> {{ user.target_weight or '-' }} kg</p>
+        <p><strong>Diet Type:</strong> {{ user.diet_type or '-' }}</p>
+        <p><strong>Allergies:</strong> {{ user.allergies or '-' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RIGHT COLUMN ===================== -->
+  <div class="col-md-8">
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">Weight Trend</div>
+      <div class="card-body">
+        <canvas id="weightTrend"></canvas>
+      </div>
+    </div>
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">BMI Trend</div>
+      <div class="card-body">
+        <canvas id="bmiTrend"></canvas>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header">Posture Score Trend</div>
+      <div class="card-body">
+        <canvas id="postureScoreTrend"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DATA FOR CHART ===================== -->
+<script>
+  const postureTrend = {{ posture_trend | tojson }};
+</script>
+
+<!-- ===================== CHART.JS ===================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% endblock %}

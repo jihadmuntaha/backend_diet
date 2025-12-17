@@ -1,0 +1,137 @@
+from flask import Blueprint, render_template, request
+from app.auth.utils import admin_login_required
+from app.services.chart_service import (
+    get_dashboard_summary,
+    get_new_users_per_week,
+    get_global_posture_score_trend,
+    get_user_trends,
+    get_user_calorie_trend,
+)
+from app.models.user import User
+from app.models.posture import PostureMeasurement
+from app.models.diet import DietRecord
+from app import db
+
+admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+# =====================================================
+# ========== DASHBOARD ================================
+# =====================================================
+
+@admin_bp.route("/dashboard")
+@admin_login_required
+def dashboard():
+    summary = get_dashboard_summary()
+    new_users = get_new_users_per_week()
+    posture_scores = get_global_posture_score_trend()
+
+    return render_template(
+        "admin/dashboard.html",
+        summary=summary,
+        new_users=new_users,
+        posture_scores=posture_scores,
+    )
+
+# =====================================================
+# ========== USERS LIST ===============================
+# =====================================================
+
+@admin_bp.route("/users")
+@admin_login_required
+def users():
+    q = request.args.get("q", "")
+    posture = request.args.get("posture", "")
+
+    query = User.query
+
+    # Search by name or email
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            (User.name.ilike(like)) | (User.email.ilike(like))
+        )
+
+    # Filter by posture category (HANYA JIKA FIELD INI ADA DI USER)
+    if posture and hasattr(User, "posture_category"):
+        query = query.filter(User.posture_category == posture)
+
+    users = query.order_by(User.created_at.desc()).all()
+
+    return render_template(
+        "admin/users.html",
+        users=users,
+        q=q,
+        posture=posture,
+    )
+
+# =====================================================
+# ========== USER DETAIL ==============================
+# =====================================================
+
+@admin_bp.route("/users/<int:user_id>")
+@admin_login_required
+def user_detail(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+
+    posture_trend = get_user_trends(user_id)
+    calorie_trend = get_user_calorie_trend(user_id)
+
+    return render_template(
+        "admin/user_detail.html",
+        user=user,
+        posture_trend=posture_trend,
+        calorie_trend=calorie_trend,
+    )
+
+# =====================================================
+# ========== POSTURE HISTORY ==========================
+# =====================================================
+
+@admin_bp.route("/users/<int:user_id>/posture")
+@admin_login_required
+def posture_history(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+
+    postures = (
+        PostureMeasurement.query
+        .filter_by(user_id=user_id)
+        .order_by(PostureMeasurement.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "admin/posture_history.html",
+        user=user,
+        postures=postures,
+    )
+
+# =====================================================
+# ========== DIET HISTORY =============================
+# =====================================================
+
+@admin_bp.route("/users/<int:user_id>/diet")
+@admin_login_required
+def diet_history(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+
+    diets = (
+        DietRecord.query
+        .filter_by(user_id=user_id)
+        .order_by(DietRecord.record_date.desc())
+        .all()
+    )
+
+    calorie_trend = get_user_calorie_trend(user_id)
+
+    return render_template(
+        "admin/diet_history.html",
+        user=user,
+        diets=diets,
+        calorie_trend=calorie_trend,
+    )

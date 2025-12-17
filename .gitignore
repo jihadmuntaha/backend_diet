@@ -1,0 +1,30 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ===== Virtual Environment =====
+venv/
+.env
+
+# ===== Flask =====
+instance/
+
+# ===== Database =====
+*.db
+*.sqlite3
+
+# ===== Logs =====
+*.log
+
+# ===== IDE =====
+.vscode/
+.idea/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# Google OAuth
+client_secret.json
+

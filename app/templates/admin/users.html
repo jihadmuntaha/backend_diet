@@ -1,0 +1,69 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Users - Admin{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>Users</h3>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <input type="text" name="q" class="form-control" placeholder="Search name or email" value="{{ q }}">
+  </div>
+
+  <div class="col-md-3">
+    <select name="posture" class="form-select">
+      <option value="">All Posture</option>
+      <option value="normal" {{ 'selected' if posture=='normal' }}>Normal</option>
+      <option value="kyphosis" {{ 'selected' if posture=='kyphosis' }}>Kyphosis</option>
+      <option value="lordosis" {{ 'selected' if posture=='lordosis' }}>Lordosis</option>
+      <option value="scoliosis" {{ 'selected' if posture=='scoliosis' }}>Scoliosis</option>
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-striped align-middle shadow-sm">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>BMI</th>
+        <th>Posture</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.name }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.bmi or '-' }}</td>
+        <td>{{ u.posture_category or '-' }}</td>
+        <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '' }}</td>
+        <td>
+          <a href="{{ url_for('admin.user_detail', user_id=u.id) }}" class="btn btn-sm btn-info">Detail</a>
+          <a href="{{ url_for('admin.posture_history', user_id=u.id) }}" class="btn btn-sm btn-secondary">Posture</a>
+          <a href="{{ url_for('admin.diet_history', user_id=u.id) }}" class="btn btn-sm btn-warning">Diet</a>
+        </td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="7" class="text-center text-muted">No users found</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
