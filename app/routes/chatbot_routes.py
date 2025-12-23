@@ -1,20 +1,33 @@
 from flask import Blueprint, request, jsonify
-from app.services.chatbot_service import get_chatbot_reply
+from app.chatbot.chatbot_engine import ChatbotPSC
+import os
 
 chatbot_bp = Blueprint("chatbot", __name__)
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+KB_PATH = os.path.join(BASE_DIR, "chatbot", "knowledge_base.json")
 
-@chatbot_bp.route("/api/chatbot", methods=["POST"])
+chatbot = ChatbotPSC(KB_PATH)
+
+@chatbot_bp.route("/chatbot", methods=["POST"])
 def chatbot_api():
-    data = request.get_json() or {}
-    message = data.get("message")
+    data = request.get_json()
 
-    if not message:
-        return jsonify({"message": "Message is required"}), 400
+    if not data or "message" not in data:
+        return jsonify({
+            "status": "error",
+            "message": "Field 'message' is required"
+        }), 400
 
-    reply = get_chatbot_reply(message)
+    user_message = data["message"]
+    response = chatbot.get_response(user_message)
 
     return jsonify({
-        "question": message,
-        "reply": reply
-    }), 200
+        "status": "success",
+        "data": {
+            "question": user_message,
+            "answer": response["answer"],
+            "score": response["score"],
+            "source": response["source"]
+        }
+    })

@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "category": "diet_perut",
+    "concept": "definisi",
+    "question_representative": "Apa itu diet?",
+    "answer": "Diet adalah pola makan jangka panjang yang dilakukan secara terencana untuk menjaga atau menurunkan berat badan.",
+    "source": "https://hellosehat.com/"
+  },
+  {
+    "id": 2,
+    "category": "diet_perut",
+    "concept": "solusi",
+    "question_representative": "Bagaimana cara mengecilkan perut buncit?",
+    "answer": "Perut buncit dapat dikurangi dengan mengatur pola makan seimbang, mengurangi gula, dan rutin berolahraga.",
+    "source": "https://hellosehat.com/"
+  }
+]

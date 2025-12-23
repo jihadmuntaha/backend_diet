@@ -1,4 +1,4 @@
-from app.chatbot.model import ChatbotModel
+from app.chatbot.chatbot_engine import ChatbotModel
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))

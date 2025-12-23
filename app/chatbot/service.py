@@ -1,5 +1,5 @@
 import os
-from app.chatbot.model import ChatbotModel
+from app.chatbot.chatbot_engine import ChatbotModel
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DATASET_PATH = os.path.join(

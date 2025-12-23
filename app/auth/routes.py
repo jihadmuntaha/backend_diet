@@ -11,9 +11,7 @@ import secrets
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/")
 
-# =====================================================
 # ========== JSON API: Register & Login (MOBILE) ======
-# =====================================================
 
 @auth_bp.route("/api/auth/register", methods=["POST"])
 def register():
@@ -61,9 +59,7 @@ def login():
     }), 200
 
 
-# =====================================================
 # ========== ADMIN LOGIN MANUAL (WEB) =================
-# =====================================================
 
 @auth_bp.route("/admin/login", methods=["GET", "POST"])
 def admin_login_local():
@@ -84,14 +80,12 @@ def admin_login_local():
     # ✔ SIMPAN DATA ADMIN KE SESSION
     session["admin_id"] = user.id
     session["admin_email"] = user.email
-    session["admin_name"] = user.name     # ← ini yang penting
+    session["admin_name"] = user.name 
 
     return redirect(url_for("admin.dashboard"))
 
 
-# =====================================================
 # ========== ADMIN REGISTER (WITH SECRET) =============
-# =====================================================
 
 @auth_bp.route("/admin/register", methods=["GET", "POST"])
 def admin_register():
