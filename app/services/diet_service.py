@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List
-from app.models.user import User
-from app.models.posture import PostureMeasurement
+from models.users import Users as User
+from models.user_health import UserHealth
 from app.services.posture_service import classify_bmi
 
 def estimate_calorie_target(
@@ -87,7 +87,7 @@ def build_posture_exercises(posture_category: str) -> List[str]:
 
 def generate_diet_recommendation(
     user: User,
-    latest_posture: PostureMeasurement = None,
+    latest_posture: UserHealth = None,
 ) -> Dict:
     allergies = []
     if user.allergies:

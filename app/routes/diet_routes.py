@@ -1,9 +1,9 @@
 import json
 from datetime import date
 from flask import Blueprint, request, jsonify, g
-from app import db
-from app.models.diet import DietRecord
-from app.models.posture import PostureMeasurement
+from config import db
+from models.recomendation import Recommendations
+from models.user_health import UserHealth
 from app.auth.utils import auth_required, admin_required
 from app.services.diet_service import generate_diet_recommendation
 
@@ -16,23 +16,21 @@ def create_recommendation_and_record():
     calorie_intake = data.get("calorie_intake")
 
     latest_posture = (
-        PostureMeasurement.query
+        UserHealth.query
         .filter_by(user_id=g.current_user.id)
-        .order_by(PostureMeasurement.created_at.desc())
+        .order_by(UserHealth.created_at.desc())
         .first()
     )
 
     rec = generate_diet_recommendation(g.current_user, latest_posture)
 
-    record = DietRecord(
+    record = Recommendations(
         user_id=g.current_user.id,
-        record_date=date.today(),
-        calorie_intake=calorie_intake,
-        daily_calorie_target=rec["daily_calorie_target"],
-        recommended_foods=json.dumps(rec["recommended_foods"]),
-        recommended_exercises=json.dumps(rec["recommended_exercises"]),
-        notes=data.get("notes"),
+        scan_id=data.get("scan_id"),
+        rekomendasi_makanan=json.dumps(rec["recommended_foods"]),
+        rekomendasi_olahraga=json.dumps(rec["recommended_exercises"]), 
     )
+
     db.session.add(record)
     db.session.commit()
 
@@ -44,9 +42,9 @@ def create_recommendation_and_record():
 @auth_required
 def my_diet_history():
     diets = (
-        DietRecord.query
+        Recommendations.query
         .filter_by(user_id=g.current_user.id)
-        .order_by(DietRecord.record_date.desc())
+        .order_by(Recommendations.record_date.desc())
         .all()
     )
     return jsonify([d.to_dict() for d in diets])
@@ -56,9 +54,9 @@ def my_diet_history():
 @admin_required
 def user_diet_history(user_id):
     diets = (
-        DietRecord.query
+        Recommendations.query
         .filter_by(user_id=user_id)
-        .order_by(DietRecord.record_date.desc())
+        .order_by(Recommendations.record_date.desc())
         .all()
     )
     return jsonify([d.to_dict() for d in diets])

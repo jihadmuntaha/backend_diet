@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, redirect, url_for, session, render_template
-from app import db
-from app.models.user import User
+from config import db
+from models.users import Users
 from .utils import create_access_token
 import os
 from google.oauth2 import id_token
@@ -9,59 +9,9 @@ import requests
 from urllib.parse import urlencode
 import secrets
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/")
+auth_bp = Blueprint("auth", __name__)
 
-# ========== JSON API: Register & Login (MOBILE) ======
-
-@auth_bp.route("/api/auth/register", methods=["POST"])
-def register():
-    data = request.get_json() or {}
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-
-    if not all([name, email, password]):
-        return jsonify({"message": "Missing required fields"}), 400
-
-    if User.query.filter_by(email=email).first():
-        return jsonify({"message": "Email already registered"}), 400
-
-    user = User(name=name, email=email)
-    user.set_password(password)
-
-    db.session.add(user)
-    db.session.commit()
-
-    token = create_access_token(user)
-    return jsonify({
-        "access_token": token,
-        "user": user.to_dict()
-    }), 201
-
-
-@auth_bp.route("/api/auth/login", methods=["POST"])
-def login():
-    data = request.get_json() or {}
-    email = data.get("email")
-    password = data.get("password")
-
-    if not all([email, password]):
-        return jsonify({"message": "Missing email or password"}), 400
-
-    user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return jsonify({"message": "Invalid credentials"}), 401
-
-    token = create_access_token(user)
-    return jsonify({
-        "access_token": token,
-        "user": user.to_dict()
-    }), 200
-
-
-# ========== ADMIN LOGIN MANUAL (WEB) =================
-
-@auth_bp.route("/admin/login", methods=["GET", "POST"])
+@auth_bp.route("/", methods=["GET", "POST"])
 def admin_login_local():
     if request.method == "GET":
         return render_template("admin/login.html")
@@ -69,7 +19,7 @@ def admin_login_local():
     email = request.form.get("email")
     password = request.form.get("password")
 
-    user = User.query.filter_by(email=email, is_admin=True).first()
+    user = Users.query.filter_by(email=email, role="admin").first()
 
     if not user or not user.check_password(password):
         return render_template(
@@ -80,7 +30,7 @@ def admin_login_local():
     # ✔ SIMPAN DATA ADMIN KE SESSION
     session["admin_id"] = user.id
     session["admin_email"] = user.email
-    session["admin_name"] = user.name 
+    session["admin_name"] = user.fullname
 
     return redirect(url_for("admin.dashboard"))
 
@@ -92,12 +42,12 @@ def admin_register():
     if request.method == "GET":
         return render_template("admin/register.html")
 
-    name = request.form.get("name")
+    fullname = request.form.get("name")
     email = request.form.get("email")
     password = request.form.get("password")
     secret = request.form.get("secret")
 
-    ADMIN_SECRET = os.getenv("ADMIN_REGISTER_SECRET", "REGISTER_ADMIN_2025")
+    ADMIN_SECRET = os.getenv("ADMIN_REGISTER_SECRET")
 
     if secret != ADMIN_SECRET:
         return render_template(
@@ -105,16 +55,17 @@ def admin_register():
             error="Secret admin salah"
         )
 
-    if User.query.filter_by(email=email).first():
+    if Users.query.filter_by(email=email).first():
         return render_template(
             "admin/register.html",
             error="Email sudah terdaftar"
         )
 
-    user = User(
-        name=name,
+    user = Users(
+        fullname=fullname,
+        jenis_kelamin="L",
         email=email,
-        is_admin=True
+        role="admin"
     )
     user.set_password(password)
 
@@ -186,21 +137,21 @@ def google_callback():
         return f"Invalid ID token: {str(e)}", 400
 
     email = info.get("email")
-    name = info.get("name")
+    fullname = info.get("fullname")
 
     if not email:
         return "Google did not return an email", 400
 
-    user = User.query.filter_by(email=email).first()
+    user = Users.query.filter_by(email=email).first()
     if not user:
-        user = User(email=email, name=name)
+        user = Users(email=email, name=fullname)
         db.session.add(user)
         db.session.commit()
 
 
     session["admin_id"] = user.id
     session["admin_email"] = user.email
-    session["admin_name"] = user.name
+    session["admin_name"] = user.fullname
 
     return redirect(url_for("admin.dashboard"))
 

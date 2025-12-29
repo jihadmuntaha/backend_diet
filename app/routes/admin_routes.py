@@ -7,10 +7,10 @@ from app.services.chart_service import (
     get_user_trends,
     get_user_calorie_trend,
 )
-from app.models.user import User
-from app.models.posture import PostureMeasurement
-from app.models.diet import DietRecord
-from app import db
+from models.users import Users
+from models.user_health import UserHealth
+from models.recomendation import Recommendations
+from config import db
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -42,21 +42,20 @@ def users():
     q = request.args.get("q", "")
     posture = request.args.get("posture", "")
 
-    query = User.query
+    query = Users.query
 
     # Search by name or email
     if q:
         like = f"%{q}%"
         query = query.filter(
-            (User.name.ilike(like)) | (User.email.ilike(like))
+            (Users.name.ilike(like)) | (Users.email.ilike(like))
         )
 
     # Filter by posture category (HANYA JIKA FIELD INI ADA DI USER)
-    if posture and hasattr(User, "posture_category"):
-        query = query.filter(User.posture_category == posture)
+    if posture and hasattr(Users, "posture_category"):
+        query = query.filter(Users.posture_category == posture)
 
-    users = query.order_by(User.created_at.desc()).all()
-
+    users = query.order_by(Users.created_at.desc()).all()
     return render_template(
         "admin/users.html",
         users=users,
@@ -71,7 +70,7 @@ def users():
 @admin_bp.route("/users/<int:user_id>")
 @admin_login_required
 def user_detail(user_id):
-    user = db.session.get(User, user_id)
+    user = db.session.get(Users, user_id)
     if not user:
         return "User not found", 404
 
@@ -92,14 +91,14 @@ def user_detail(user_id):
 @admin_bp.route("/users/<int:user_id>/posture")
 @admin_login_required
 def posture_history(user_id):
-    user = db.session.get(User, user_id)
+    user = db.session.get(Users, user_id)
     if not user:
         return "User not found", 404
 
     postures = (
-        PostureMeasurement.query
+        UserHealth.query
         .filter_by(user_id=user_id)
-        .order_by(PostureMeasurement.created_at.desc())
+        .order_by(UserHealth.created_at.desc())
         .all()
     )
 
@@ -116,14 +115,14 @@ def posture_history(user_id):
 @admin_bp.route("/users/<int:user_id>/diet")
 @admin_login_required
 def diet_history(user_id):
-    user = db.session.get(User, user_id)
+    user = db.session.get(Users, user_id)
     if not user:
         return "User not found", 404
 
     diets = (
-        DietRecord.query
+        Recommendations.query
         .filter_by(user_id=user_id)
-        .order_by(DietRecord.record_date.desc())
+        .order_by(Recommendations.created_at.desc())
         .all()
     )
 

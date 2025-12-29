@@ -1,8 +1,8 @@
 import json
 from flask import Blueprint, request, jsonify, g
-from app import db
-from app.models.posture import PostureMeasurement
-from app.models.user import User
+from config import db
+from models.user_health import UserHealth
+# from models.users import Users as User
 from app.auth.utils import auth_required, admin_required
 from app.services.posture_service import calculate_bmi, classify_posture_from_keypoints
 
@@ -25,14 +25,11 @@ def create_posture_measurement():
     bmi = calculate_bmi(height_cm, weight_kg)
     posture_category, posture_score = classify_posture_from_keypoints(keypoints_str)
 
-    posture = PostureMeasurement(
+    posture = UserHealth(
         user_id=g.current_user.id,
         height_cm=height_cm,
         weight_kg=weight_kg,
         bmi=bmi,
-        posture_category=posture_category,
-        posture_score=posture_score,
-        keypoints=keypoints_str,
     )
 
     db.session.add(posture)
@@ -41,7 +38,6 @@ def create_posture_measurement():
     user.height_cm = height_cm
     user.weight_kg = weight_kg
     user.bmi = bmi
-    user.posture_category = posture_category
     db.session.commit()
 
     return jsonify(posture.to_dict()), 201
@@ -50,9 +46,9 @@ def create_posture_measurement():
 @auth_required
 def my_posture_history():
     postures = (
-        PostureMeasurement.query
+        UserHealth.query
         .filter_by(user_id=g.current_user.id)
-        .order_by(PostureMeasurement.created_at.desc())
+        .order_by(UserHealth.created_at.desc())
         .all()
     )
     return jsonify([p.to_dict() for p in postures])
@@ -62,9 +58,9 @@ def my_posture_history():
 @admin_required
 def user_posture_history(user_id):
     postures = (
-        PostureMeasurement.query
+        UserHealth.query
         .filter_by(user_id=user_id)
-        .order_by(PostureMeasurement.created_at.desc())
+        .order_by(UserHealth.created_at.desc())
         .all()
     )
     return jsonify([p.to_dict() for p in postures])
