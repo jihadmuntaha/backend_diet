@@ -9,7 +9,7 @@ from app.routes.diet_routes import diet_bp
 from app.routes.chart_routes import chart_bp
 from app.routes.admin_routes import admin_bp
 from app.routes.chatbot_routes import chatbot_bp
-from api.routes import api_bp, api_auth_bp
+from api.routes import api_detect_bp, api_auth_bp
 from models.users import Users
 from models.alergi import Alergi
 from models.user_health import UserHealth
@@ -34,7 +34,7 @@ app.register_blueprint(posture_bp)
 app.register_blueprint(diet_bp)
 app.register_blueprint(chart_bp)
 app.register_blueprint(admin_bp)
-app.register_blueprint(api_bp)
+app.register_blueprint(api_detect_bp)
 app.register_blueprint(api_auth_bp)
 
 with app.app_context():

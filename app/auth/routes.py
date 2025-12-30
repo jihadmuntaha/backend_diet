@@ -110,8 +110,8 @@ def google_callback():
     if not code:
         return "Missing authorization code", 400
 
+    # 1. Tukarkan CODE dengan TOKEN
     token_endpoint = "https://oauth2.googleapis.com/token"
-
     data = {
         "code": code,
         "client_id": current_app.config["GOOGLE_CLIENT_ID"],
@@ -119,13 +119,15 @@ def google_callback():
         "redirect_uri": current_app.config["OAUTH_REDIRECT_URI"],
         "grant_type": "authorization_code",
     }
-
+    
     token_resp = requests.post(token_endpoint, data=data).json()
 
     if "id_token" not in token_resp:
         return f"Failed to obtain ID token: {token_resp}", 400
 
+    # 2. Ambil Access Token (untuk People API) dan ID Token (untuk Profil)
     id_token_jwt = token_resp["id_token"]
+    access_token = token_resp.get("access_token")
 
     try:
         info = id_token.verify_oauth2_token(
@@ -136,19 +138,45 @@ def google_callback():
     except Exception as e:
         return f"Invalid ID token: {str(e)}", 400
 
+    # 3. Ambil Gender dari People API (Menggunakan Access Token)
+    final_gender = "L"  # Default
+    try:
+        people_url = "https://people.googleapis.com/v1/people/me?personFields=genders"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        people_resp = requests.get(people_url, headers=headers).json()
+        
+        genders = people_resp.get("genders", [])
+        if genders:
+            google_gender = genders[0].get("value")
+            if google_gender == "female":
+                final_gender = "P"
+            elif google_gender == "male":
+                final_gender = "L"
+    except Exception:
+        # Jika gagal ambil gender (karena scope tidak ada/private), biarkan default "L"
+        pass
+
     email = info.get("email")
-    fullname = info.get("fullname")
+    fullname = info.get("name") # Google kirim 'name', bukan 'fullname'
 
     if not email:
         return "Google did not return an email", 400
 
+    # 4. Cari atau Buat User
     user = Users.query.filter_by(email=email).first()
     if not user:
-        user = Users(email=email, name=fullname)
+        user = Users(
+            email=email, 
+            fullname=fullname or "Google User",
+            jenis_kelamin=final_gender,
+            role="admin" # Pastikan ini memang untuk admin
+        )
+        # Berikan password random karena password_hash di DB nullable=False
+        user.set_password(secrets.token_urlsafe(16))
         db.session.add(user)
         db.session.commit()
 
-
+    # 5. Simpan ke Session
     session["admin_id"] = user.id
     session["admin_email"] = user.email
     session["admin_name"] = user.fullname
