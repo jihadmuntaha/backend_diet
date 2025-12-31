@@ -9,8 +9,6 @@ from google.auth.transport import requests
 def api_login():
     data = request.get_json()
 
-        # 1. Validasi input
-
     user = Users.query.filter_by(email=data.get('email')).first()
 
     if not user or not user.check_password(data.get('password')):

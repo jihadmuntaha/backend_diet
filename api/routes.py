@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint
+from api.controllers.api_scans import api_scan
 from api.controllers.auth.api_register import api_register
 from api.controllers.auth.api_login import api_login, api_login_by_google
 from api.controllers.auth.api_forgot_password import api_forgot_password ,api_reset_password
@@ -26,7 +27,7 @@ def forgot_password():
 def reset_password():
     return api_reset_password()
 
-api_detect_bp = Blueprint('api_detect', __name__)
-@api_detect_bp.route('/detect-pose', methods=['POST'])
+api_detect_bp = Blueprint('api_detect', __name__, url_prefix='/api/detect')
+@api_detect_bp.route('/scan', methods=['POST'])
 def detect_pose():
-    pass
+    return api_scan()
