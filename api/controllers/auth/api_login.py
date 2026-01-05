@@ -26,6 +26,7 @@ def api_login():
             "users" : {
                 "id": user.id,
                 "fullname": user.fullname,
+                "jenis_kelamin": user.jenis_kelamin,
                 "email": user.email,
                 "role": user.role,
                 "photo": user.profile_picture
@@ -40,13 +41,15 @@ def api_login():
         
 
 def api_login_by_google():
-    data = request.json
+    data = request.get_json()
     id_token_from_flutter = data.get("id_token")
+    access_token_from_flutter = data.get("access_token") # Ambil access_token juga
 
     if not id_token_from_flutter:
         return jsonify({"error": "Missing ID Token"}), 400
 
     try:
+        # 1. Verifikasi ID Token seperti biasa
         info = id_token.verify_oauth2_token(
             id_token_from_flutter,
             requests.Request(),
@@ -56,25 +59,42 @@ def api_login_by_google():
         email = info.get("email")
         fullname = info.get("name")
         picture = info.get("picture")
+        
+        gender_google = None
+        
+        if access_token_from_flutter:
+            try:
+                people_url = "https://people.googleapis.com/v1/people/me?personFields=genders"
+                headers = {"Authorization": f"Bearer {access_token_from_flutter}"}
+                response = requests.get(people_url, headers=headers, timeout=5)
+                
+                if response.status_code == 200:
+                    res_data = response.json()
+                    genders = res_data.get("genders", [])
+                    if genders:
+                        raw_val = genders[0].get("value")
+                        gender_google = "Laki Laki" if raw_val == "male" else "Perempuan"
+            except Exception as e:
+                print(f"Gagal mengambil gender: {e}")
 
-        # 2. Cari user di database
+        # 2. VALIDASI PENTING: Pastikan gender_google tidak None
+        if not gender_google:
+            gender_google = "Laki Laki"
+
         user = Users.query.filter_by(email=email).first()
 
         if not user:
             user = Users(
                 email=email,
                 fullname=fullname or "User Mobile",
-                jenis_kelamin="L",
+                jenis_kelamin=gender_google,
                 role="user",
                 profile_picture=picture
             )
-            # Password random karena kolom password_hash NOT NULL
             user.set_password(secrets.token_urlsafe(16))
             db.session.add(user)
             db.session.commit()
 
-        # 3. Buat Token JWT internal (Gunakan fungsi create_access_token Anda)
-        # Token ini yang akan digunakan Flutter untuk akses API lain
         token_internal = create_access_token(identity=str(user.id))
 
         return jsonify({
@@ -84,6 +104,7 @@ def api_login_by_google():
             "users": { # Samakan strukturnya dengan login biasa
                 "id": user.id,
                 "fullname": user.fullname,
+                "jenis_kelamin": user.jenis_kelamin,
                 "email": user.email,
                 "role": user.role,
                 "photo": user.profile_picture

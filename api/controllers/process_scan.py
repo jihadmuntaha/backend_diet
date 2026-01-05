@@ -55,41 +55,55 @@ def process_posture_scan(user_id, gender, tinggi, berat, files, db_ideal):
 
     for sisi in sisi_list:
         file = files.get(sisi)
-        if not file:
-            continue
+        if not file: continue
 
         temp_path = f"temp_{sisi}_{user_id}.jpg"
         file.save(temp_path)
         
         lm_user = get_landmarks(temp_path)
-        try: 
-            if lm_user:
-                print(f"DEBUG: Berhasil deteksi landmark untuk {sisi}")
-                lm_ideal = db_ideal[f"{gender}_{sisi}"]
-                u_boxes = get_body_boxes(lm_user)
-                i_boxes_raw = get_body_boxes(lm_ideal)
+        # if lm_user == "NOT_FULL_BODY":
+        #     return {
+        #         "status": "error",
+        #         "message": f"Foto {sisi} hanya memperlihatkan sebagian tubuh. Pastikan seluruh tubuh dari kepala hingga lutut terlihat di kamera."
+        #     }
+        if lm_user:
+            lm_ideal = db_ideal[f"{gender}_{sisi}"]
+            u_boxes = get_body_boxes(lm_user)
+            i_boxes_raw = get_body_boxes(lm_ideal)
+            
+            sisi_res = {}
+            for bag in ['perut', 'lengan', 'paha']:
+                box_u = u_boxes[bag]
+                # Skalakan kotak ideal ke dimensi user untuk menghitung IoU (sebagai info saja)
+                box_i_scaled = scale_ideal_to_user(i_boxes_raw[bag], lm_ideal, lm_user)
+                iou = calculate_iou(box_u, box_i_scaled)
                 
-                sisi_res = {}
-                for bag in ['perut', 'lengan', 'paha']:
-                    box_u = u_boxes[bag]
-                    box_i_scaled = scale_ideal_to_user(i_boxes_raw[bag], lm_ideal, lm_user)
-                    iou = calculate_iou(box_u, box_i_scaled)
-                    
-                    luas_u = (box_u[2]-box_u[0]) * (box_u[3]-box_u[1])
-                    luas_i = (box_i_scaled[2]-box_i_scaled[0]) * (box_i_scaled[3]-box_i_scaled[1])
-                    
-                    status = "IDEAL" if iou > 0.75 else ("OVERWEIGHT" if luas_u > luas_i else "UNDERWEIGHT")
-                    sisi_res[bag] = {"status": status, "iou": round(iou, 2)}
-                
-                hasil_sisi[sisi] = sisi_res
-            else:
-                print(f"DEBUG: Gagal deteksi landmark untuk {sisi}")
-        except Exception as e:
-            print(f"Error proses {sisi}: {e}")
-        
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+                # --- LOGIKA RASIO (Kunci Akurasi) ---
+                # Hitung lebar relatif terhadap tinggi box tersebut
+                w_u = box_u[2] - box_u[0]
+                h_u = box_u[3] - box_u[1]
+                ratio_user = w_u / h_u if h_u > 0 else 0
 
+                w_i = box_i_scaled[2] - box_i_scaled[0]
+                h_i = box_i_scaled[3] - box_i_scaled[1]
+                ratio_ideal = w_i / h_i if h_i > 0 else 0
+
+                # Threshold: 15% lebih lebar = Overweight, 15% lebih tipis = Underweight
+                threshold = 0.15 
+                
+                if ratio_user > ratio_ideal * (1 + threshold):
+                    status = "OVERWEIGHT"
+                elif ratio_user < ratio_ideal * (1 - threshold):
+                    status = "UNDERWEIGHT"
+                else:
+                    status = "IDEAL"
+                
+                sisi_res[bag] = {"status": status, "iou": round(iou, 2)}
+            
+            hasil_sisi[sisi] = sisi_res
+        
+        if os.path.exists(temp_path): os.remove(temp_path)
+    # Validasi semua sisi terdeteksi
     required_sides = ['depan', 'samping_kanan', 'samping_kiri']
     missing_sides = [side for side in required_sides if side not in hasil_sisi]
     
