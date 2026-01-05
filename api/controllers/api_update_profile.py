@@ -2,6 +2,7 @@ import os
 from flask import jsonify, request, request
 from models.users import Users as User
 from config import db, app
+from werkzeug.utils import secure_filename
 
 
 def update_profile(user_id):

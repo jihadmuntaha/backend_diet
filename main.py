@@ -9,6 +9,8 @@ from app.routes.diet_routes import diet_bp
 from app.routes.chart_routes import chart_bp
 from app.routes.admin_routes import admin_bp
 from app.routes.chatbot_routes import chatbot_bp
+from app.routes.article_routes import article_bp
+from app.tasks.scheduler import start_scheduler
 from api.routes import api_detect_bp, api_auth_bp, api_bp
 from models.users import Users
 from models.alergi import Alergi
@@ -26,6 +28,7 @@ db.init_app(app)
 mail.init_app(app)
 jwt.init_app(app)
 migrate.init_app(app, db)
+start_scheduler()
 
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(auth_bp)
@@ -37,6 +40,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(api_detect_bp)
 app.register_blueprint(api_auth_bp)
 app.register_blueprint(api_bp)
+app.register_blueprint(article_bp)
 
 with app.app_context():
     db.create_all()
