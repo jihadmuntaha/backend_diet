@@ -3,7 +3,7 @@ from flask_mail import Message
 from config import db
 from models.users import Users
 from datetime import datetime, timedelta
-from main import mail
+from config import mail
 import random
 import os
 
