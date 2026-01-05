@@ -5,7 +5,7 @@ from api.controllers.auth.api_register import api_register
 from api.controllers.auth.api_login import api_login, api_login_by_google
 from api.controllers.auth.api_forgot_password import api_forgot_password ,api_reset_password
 from api.controllers.api_history import get_history
-# app = Flask(__name__)
+from api.controllers.api_update_profile import get_image, get_user_profile, update_profile
 
 api_auth_bp = Blueprint('api_auth', __name__, url_prefix='/api/auth')
 
@@ -42,3 +42,15 @@ def get_user_history(user_id):
 @api_bp.route('/report/<int:user_id>', methods=['GET'])
 def api_status(user_id):
     return get_report(user_id)
+
+@api_bp.route('/update_profile/<int:user_id>', methods=['GET', 'POST'])
+def api_update_profile(user_id):
+    return update_profile(user_id)
+
+@api_bp.route('/get_image/<filename>')
+def api_get_image(filename):
+    return get_image(filename)
+
+@api_bp.route('/get_profile/<int:user_id>', methods=['GET'])
+def api_get_user_profile(user_id):
+    return get_user_profile(user_id)
