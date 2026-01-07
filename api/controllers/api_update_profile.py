@@ -1,28 +1,43 @@
 import os
-from flask import jsonify, request, request
-from models.users import Users as User
-from config import db, app
+from flask import request, jsonify, current_app, send_from_directory
 from werkzeug.utils import secure_filename
-
+from config import db
+from models.users import Users as User
 
 def update_profile(user_id):
     try:
         user = User.query.get(user_id)
-        if not user:
-            return jsonify({"message": "User tidak ditemukan"}), 404
-
-        # Update teks (Nama & Email)
         user.fullname = request.form.get('fullname', user.fullname)
         user.email = request.form.get('email', user.email)
+        user.jenis_kelamin = request.form.get('jenis_kelamin', user.jenis_kelamin)
 
-        # Handle Upload Foto
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
             filename = secure_filename(f"user_{user_id}_{file.filename}")
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            user.profile_picture = filename # Simpan nama file ke kolom profile_picture
+            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+            user.profile_picture = filename
 
         db.session.commit()
-        return jsonify({"message": "Update berhasil", "profile_picture": user.profile_picture})
+        return jsonify({"message": "Berhasil", "data": {
+            "fullname": user.fullname, 
+            "email": user.email, 
+            "jenis_kelamin": user.jenis_kelamin,
+            "profile_picture": user.profile_picture
+        }}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def get_image(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+def get_user_profile(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User tidak ditemukan"}), 404
+    
+    return jsonify({
+        "fullname": user.fullname,
+        "email": user.email,
+        "jenis_kelamin": user.jenis_kelamin,
+        "profile_picture": user.profile_picture # Nama file foto profil
+    }), 200
