@@ -1,55 +1,34 @@
 SOURCES = [
-
-    # =========================
-    # MEDIA NASIONAL (SCRAPING)
-    # =========================
     {
-        "source_name": "Kompas Health",
+        "source_name": "Kompas Diet",
         "type": "scraping",
-        "base_url": "https://health.kompas.com",
         "urls": [
-            "https://health.kompas.com/kesehatan",
-            "https://health.kompas.com/diet"
+            "https://health.kompas.com/search/diet",
+            "https://health.kompas.com/search/gizi",
+            "https://health.kompas.com/search/nutrisi"
         ]
     },
-
     {
-        "source_name": "Detik Health",
+        "source_name": "Detik Diet",
         "type": "scraping",
-        "base_url": "https://health.detik.com",
         "urls": [
-            "https://health.detik.com/indeks",
-            "https://health.detik.com/diet"
+            "https://www.detik.com/search/searchall?query=diet&siteid=3",
+            "https://www.detik.com/search/searchall?query=gizi&siteid=3"
         ]
     },
-
+    {
+        "source_name": "HelloSehat",
+        "type": "scraping",
+        "urls": [
+            "https://hellosehat.com/nutrisi/"
+        ]
+    },
     {
         "source_name": "Alodokter",
         "type": "scraping",
-        "base_url": "https://www.alodokter.com",
         "urls": [
-            "https://www.alodokter.com/kesehatan",
-            "https://www.alodokter.com/diet-sehat"
-        ]
-    },
-
-    {
-        "source_name": "Halodoc",
-        "type": "scraping",
-        "base_url": "https://www.halodoc.com",
-        "urls": [
-            "https://www.halodoc.com/artikel",
-            "https://www.halodoc.com/kesehatan"
-        ]
-    },
-
-    {
-        "source_name": "KlikDokter",
-        "type": "scraping",
-        "base_url": "https://www.klikdokter.com",
-        "urls": [
-            "https://www.klikdokter.com/kesehatan",
-            "https://www.klikdokter.com/gaya-hidup"
+            "https://www.alodokter.com/kategori/gizi"
+            "https://www.alodokter.com/kategori/diet"
         ]
     }
 ]

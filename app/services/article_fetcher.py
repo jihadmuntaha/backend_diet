@@ -5,10 +5,26 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
 
+
 from config import db
 from models.article import Article
 from app.services.sources import SOURCES
 
+
+# =========================
+# KEYWORDS DIET (FILTER LIST)
+# =========================
+PRIMARY_KEYWORDS = [
+    "diet", "pola makan", "menu diet",
+    "kalori", "defisit kalori",
+    "menurunkan berat"
+]
+
+SECONDARY_KEYWORDS = [
+    "berat badan", "protein",
+    "lemak", "karbohidrat",
+    "nutrisi", "gizi"
+]
 
 def generate_hash(title, url):
     raw = f"{title}{url}".lower().strip()
@@ -16,12 +32,10 @@ def generate_hash(title, url):
 
 
 # =========================
-# SCRAPING ARTIKEL
+# SCRAPING LIST ARTIKEL
 # =========================
 def fetch_all_articles():
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     for source in SOURCES:
         if source["type"] != "scraping":
@@ -45,9 +59,27 @@ def fetch_all_articles():
                 if not title or len(title) < 30:
                     continue
 
+                title_lower = title.lower()
+
+                # ===== FILTER DIET (INI YANG KAMU TANYAKAN) =====
+                text = title_lower
+                score = 0
+
+                for k in PRIMARY_KEYWORDS:
+                    if k in text:
+                        score += 2   # keyword utama bobot tinggi
+
+                for k in SECONDARY_KEYWORDS:
+                    if k in text:
+                        score += 1   # keyword pendukung
+
+                # ===== AMBANG BATAS =====
+                if score < 1:
+                    continue    
+
                 link = urljoin(base_url, link)
 
-                # ===== FILTER URL ARTIKEL =====
+                # ===== FILTER URL PER SUMBER =====
                 if source["source_name"] == "Kompas Health":
                     if not link.startswith("https://health.kompas.com/read/"):
                         continue
@@ -55,14 +87,26 @@ def fetch_all_articles():
                 if source["source_name"] == "Detik Health":
                     if not link.startswith("https://health.detik.com/"):
                         continue
-
-                # ===== DEDUP BERDASARKAN URL =====
+                
+                if source["source_name"] == "alodokter":
+                    if not link.startswith("https://www.alodokter.com/"):
+                        continue    
+                
+                if source["source_name"] == "HelloSehat":
+                    if not link.startswith("https://hellosehat.com/"):
+                        continue
+                
+                if source["source_name"] == "KlikDokter":
+                    if not link.startswith("https://www.klikdokter.com/"):
+                        continue
+                        
+                # ===== DEDUP URL =====
                 if Article.query.filter_by(article_url=link).first():
                     continue
 
                 h = generate_hash(title, link)
 
-                # ===== DEDUP BERDASARKAN HASH =====
+                # ===== DEDUP HASH =====
                 if Article.query.filter_by(content_hash=h).first():
                     continue
 
@@ -72,13 +116,13 @@ def fetch_all_articles():
                     article_url=link,
                     image_url=None,
                     source_name=source["source_name"],
+                    category="diet",
                     published_at=datetime.utcnow(),
                     content_hash=h
                 )
 
                 db.session.add(article)
 
-            # commit per source (lebih aman)
             try:
                 db.session.commit()
             except Exception as e:
@@ -87,63 +131,42 @@ def fetch_all_articles():
 
 
 # =========================
-# API (NEWSAPI)
+# SCRAPE ISI ARTIKEL (DETAIL)
 # =========================
-def fetch_articles_api():
-    api_key = os.getenv("NEWS_API_KEY")
-    if not api_key:
-        return
+def scrape_article_content(url, source_name):
+    headers = {"User-Agent": "Mozilla/5.0"}
+    r = requests.get(url, headers=headers, timeout=10)
+    r.raise_for_status()
 
-    params = {
-        "q": "diet OR nutrisi OR gizi OR olahraga OR penurunan berat badan",
-        "language": "id",
-        "pageSize": 20,
-        "sortBy": "publishedAt",
-        "apiKey": api_key
+    soup = BeautifulSoup(r.text, "lxml")
+
+    content_paragraphs = []
+    image_url = None
+    summary = None
+
+    if "kompas.com" in url:
+        content_paragraphs = soup.select("div.read__content p")
+        img = soup.select_one("meta[property='og:image']")
+        desc = soup.select_one("meta[name='description']")
+
+    elif "detik.com" in url:
+        content_paragraphs = soup.select("div.detail__body-text p")
+        img = soup.select_one("meta[property='og:image']")
+        desc = soup.select_one("meta[name='description']")
+
+    content = "\n\n".join(
+        p.get_text(strip=True) for p in content_paragraphs if p.get_text(strip=True)
+    )
+
+    if img:
+        image_url = img.get("content")
+
+    if desc:
+        summary = desc.get("content")
+
+    return {
+        "content": content if len(content) > 200 else None,
+        "image_url": image_url,
+        "summary": summary
     }
-
-    r = requests.get("https://newsapi.org/v2/everything", params=params, timeout=10)
-    data = r.json()
-
-    if data.get("status") != "ok":
-        return
-
-    KEYWORDS = [
-        "diet", "nutrisi", "gizi",
-        "kalori", "berat badan",
-        "olahraga", "protein", "lemak"
-    ]
-
-    for item in data.get("articles", []):
-        title = item.get("title")
-        summary = item.get("description") or ""
-        link = item.get("url")
-
-        if not title or not link:
-            continue
-
-        text = f"{title} {summary}".lower()
-
-        if not any(k in text for k in KEYWORDS):
-            continue
-
-        if Article.query.filter_by(article_url=link).first():
-            continue
-
-        article = Article(
-            title=title,
-            summary=summary,
-            article_url=link,
-            image_url=item.get("urlToImage"),
-            source_name="NewsAPI",
-            category="diet",
-            published_at=datetime.fromisoformat(
-                item["publishedAt"].replace("Z", "+00:00")
-            ),
-            content_hash=generate_hash(title, link)
-        )
-
-        db.session.add(article)
-
-    db.session.commit()
 
