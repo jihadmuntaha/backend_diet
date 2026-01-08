@@ -156,6 +156,6 @@ Pastikan environment variable (OAuth client, secret key, dsb.) sudah dikonfigura
 
 ## 📄 License
 
-Project ini ditujukan untuk tugas Capston Project Semester 5 Tahun 2025.
+Project ini ditujukan untuk tugas Capstone Project Semester 5 Tahun 2025.
 
 ---
