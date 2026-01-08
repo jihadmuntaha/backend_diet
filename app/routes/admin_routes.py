@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from app.auth.utils import admin_login_required
+
 from app.services.chart_service import (
     get_dashboard_summary,
     get_new_users_per_week,
@@ -7,10 +8,13 @@ from app.services.chart_service import (
     get_user_trends,
     get_user_calorie_trend,
 )
+
 from models.users import Users
 from models.user_health import UserHealth
+from models.posture_scan import PostureScan   # ← INI KUNCI
 from models.recomendation import Recommendations
 from config import db
+
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -55,7 +59,7 @@ def users():
     if posture and hasattr(Users, "posture_category"):
         query = query.filter(Users.posture_category == posture)
 
-    users = query.order_by(Users.created_at.desc()).all()
+    users = Users.query.order_by(Users.id.asc()).all()
     return render_template(
         "admin/users.html",
         users=users,
@@ -67,6 +71,8 @@ def users():
 # ========== USER DETAIL ==============================
 # =====================================================
 
+
+
 @admin_bp.route("/users/<int:user_id>")
 @admin_login_required
 def user_detail(user_id):
@@ -74,15 +80,37 @@ def user_detail(user_id):
     if not user:
         return "User not found", 404
 
-    posture_trend = get_user_trends(user_id)
-    calorie_trend = get_user_calorie_trend(user_id)
+    # Ambil data kesehatan terakhir
+    health = (
+        UserHealth.query
+        .filter_by(user_id=user.id)
+        .order_by(UserHealth.created_at.desc())
+        .first()
+    )
+
+    # Ambil posture scan terakhir (PAKAI CLASS, BUKAN MODULE)
+    latest_posture = (
+        PostureScan.query
+        .filter_by(user_id=user.id)
+        .order_by(PostureScan.created_at.desc())
+        .first()
+    )
+
+    # Hitung total scan
+    scan_count = (
+        PostureScan.query
+        .filter_by(user_id=user.id)
+        .count()
+    )
 
     return render_template(
         "admin/user_detail.html",
         user=user,
-        posture_trend=posture_trend,
-        calorie_trend=calorie_trend,
+        health=health,
+        posture=latest_posture,
+        scan_count=scan_count,
     )
+
 
 # =====================================================
 # ========== POSTURE HISTORY ==========================

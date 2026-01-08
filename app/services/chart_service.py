@@ -4,7 +4,7 @@ from config import db
 from models.users import Users as User
 from models.user_health import UserHealth
 from models.recomendation import Recommendations
-from models.postur_scan import PostureScan
+from models.posture_scan import PostureScan
 from app.services.posture_service import classify_bmi
 
 def get_dashboard_summary():

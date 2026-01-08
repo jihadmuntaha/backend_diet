@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from config import db
 from models.user_health import UserHealth
-from models.postur_scan import PostureScan
+from models.posture_scan import PostureScan
 from models.recomendation import Recommendations
 from models.alergi import Alergi
 from api.controllers.predict import get_landmarks, get_body_boxes, scale_ideal_to_user, calculate_iou

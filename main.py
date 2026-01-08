@@ -15,7 +15,7 @@ from api.routes import api_detect_bp, api_auth_bp, api_bp
 from models.users import Users
 from models.alergi import Alergi
 from models.user_health import UserHealth
-from models.postur_scan import PostureScan
+from models.posture_scan import PostureScan
 from models.recomendation import Recommendations
 from models.user_reviews import UserReview
 

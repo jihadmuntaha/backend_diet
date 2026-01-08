@@ -1,6 +1,6 @@
 from flask import jsonify
 from sqlalchemy import func
-from models.postur_scan import PostureScan
+from models.posture_scan import PostureScan
 from models.user_health import UserHealth
 from config import db
 

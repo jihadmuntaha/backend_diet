@@ -1,71 +1,196 @@
 {% extends "admin/layout.html" %}
-
-{% block title %}User Detail - Admin{% endblock %}
+{% block title %}User Detail{% endblock %}
 
 {% block content %}
 
+<!-- ===================== HEADER ===================== -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h3>User Detail: {{ user.name }}</h3>
-  <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-sm">Back</a>
+  <div>
+    <h4 class="fw-bold mb-1">User Detail</h4>
+    <p class="text-muted mb-0">User profile, role, and health summary</p>
+  </div>
+
+  <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
 </div>
 
-<div class="row mb-3">
-  <!-- ===================== LEFT COLUMN ===================== -->
+<!-- ===================== PROFILE & HEALTH ===================== -->
+<div class="row g-4 mb-4">
+
+  <!-- PROFILE -->
   <div class="col-md-4">
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header">Profile</div>
+    <div class="card shadow-sm border-0 h-100">
       <div class="card-body">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Height:</strong> {{ user.height_cm or '-' }} cm</p>
-        <p><strong>Weight:</strong> {{ user.weight_kg or '-' }} kg</p>
-        <p><strong>BMI:</strong> {{ user.bmi or '-' }}</p>
-        <p><strong>Posture:</strong> {{ user.posture_category or '-' }}</p>
-        <p><strong>Activity:</strong> {{ user.activity_level or '-' }}</p>
-      </div>
-    </div>
+        <h6 class="fw-semibold mb-3">Profile</h6>
 
-    <div class="card shadow-sm">
-      <div class="card-header">Summary</div>
-      <div class="card-body">
-        <p><strong>Target Weight:</strong> {{ user.target_weight or '-' }} kg</p>
-        <p><strong>Diet Type:</strong> {{ user.diet_type or '-' }}</p>
-        <p><strong>Allergies:</strong> {{ user.allergies or '-' }}</p>
+        <!-- FULL NAME -->
+        <div class="mb-3">
+          <div class="small text-muted">Full Name</div>
+          <div class="fw-semibold">{{ user.fullname }}</div>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="mb-3">
+          <div class="small text-muted">Email</div>
+          <div>{{ user.email }}</div>
+        </div>
+
+        <!-- GENDER -->
+        <div class="mb-3">
+          <div class="small text-muted">Gender</div>
+          <div>{{ user.jenis_kelamin|capitalize }}</div>
+        </div>
+
+        <!-- ROLE -->
+        <div class="mb-3">
+          <div class="small text-muted">Role</div>
+          {% if user.role == 'admin' %}
+            <span class="badge bg-danger">Admin</span>
+          {% else %}
+            <span class="badge bg-secondary">User</span>
+          {% endif %}
+        </div>
+
+        <!-- JOINED -->
+        <div>
+          <div class="small text-muted">Joined</div>
+          <div>
+            {{ user.created_at.strftime('%d %B %Y') if user.created_at else '-' }}
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- ===================== RIGHT COLUMN ===================== -->
-  <div class="col-md-8">
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header">Weight Trend</div>
-      <div class="card-body">
-        <canvas id="weightTrend"></canvas>
-      </div>
-    </div>
+  <!-- ===================== HEALTH SUMMARY ===================== -->
+<div class="col-md-8">
+  <div class="card shadow-sm border-0 h-100">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3">Health Summary</h6>
 
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header">BMI Trend</div>
-      <div class="card-body">
-        <canvas id="bmiTrend"></canvas>
-      </div>
-    </div>
+      {% if user.role == 'admin' %}
+        <!-- ADMIN EMPTY STATE -->
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-shield-lock fs-2 mb-3"></i>
+          <p class="mb-1 fw-semibold">Admin Account</p>
+          <p class="small mb-0">
+            This account is used for system monitoring and does not have health data.
+          </p>
+        </div>
+      {% else %}
+        <!-- USER HEALTH DATA -->
+        <div class="row g-3">
 
-    <div class="card shadow-sm">
-      <div class="card-header">Posture Score Trend</div>
-      <div class="card-body">
-        <canvas id="postureScoreTrend"></canvas>
-      </div>
+          <!-- BMI -->
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center h-100">
+              <div class="text-muted small mb-1">BMI</div>
+              {% if health and health.bmi %}
+                <div class="fs-4 fw-bold">{{ health.bmi }}</div>
+              {% else %}
+                <div class="text-muted">N/A</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- POSTURE STATUS -->
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center h-100">
+              <div class="text-muted small mb-1">Posture Status</div>
+
+              {% if posture %}
+                {% if posture.posture_overall == 'normal' %}
+                  <span class="badge bg-success">Normal</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">
+                    {{ posture.posture_overall|capitalize }}
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">N/A</span>
+              {% endif %}
+
+            </div>
+          </div>
+
+          <!-- SCAN COUNT -->
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center h-100">
+              <div class="text-muted small mb-1">Posture Scans</div>
+              <div class="fs-4 fw-bold">{{ scan_count }}</div>
+            </div>
+          </div>
+
+        </div>
+      {% endif %}
+
     </div>
   </div>
 </div>
 
-<!-- ===================== DATA FOR CHART ===================== -->
-<script>
-  const postureTrend = {{ posture_trend | tojson }};
-</script>
 
-<!-- ===================== CHART.JS ===================== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+          <!-- POSTURE STATUS -->
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center h-100">
+              <div class="text-muted small mb-1">Posture Status</div>
+
+              {% if posture %}
+                {% if posture.posture_overall == 'normal' %}
+                  <span class="badge bg-success">Normal</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">
+                    {{ posture.posture_overall|capitalize }}
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">N/A</span>
+              {% endif %}
+
+            </div>
+          </div>
+
+          <!-- SCAN COUNT -->
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center h-100">
+              <div class="text-muted small mb-1">Posture Scans</div>
+              <div class="fs-4 fw-bold">{{ scan_count }}</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== QUICK ACTIONS ===================== -->
+<div class="card shadow-sm border-0">
+  <div class="card-body">
+    <h6 class="fw-semibold mb-3">Quick Actions</h6>
+
+    {% if user.role == 'admin' %}
+      <p class="text-muted mb-0">
+        No health-related actions available for admin account.
+      </p>
+    {% else %}
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.posture_history', user_id=user.id) }}"
+           class="btn btn-outline-secondary">
+          <i class="bi bi-person-standing"></i> Posture History
+        </a>
+
+        <a href="{{ url_for('admin.diet_history', user_id=user.id) }}"
+           class="btn btn-outline-warning">
+          <i class="bi bi-egg-fried"></i> Diet History
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
 
 {% endblock %}

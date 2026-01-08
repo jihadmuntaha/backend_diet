@@ -1,5 +1,5 @@
 from flask import jsonify
-from models.postur_scan import PostureScan
+from models.posture_scan import PostureScan
 
 
 def get_history(user_id):
