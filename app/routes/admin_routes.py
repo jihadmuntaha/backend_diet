@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, jsonify, request
 from app.auth.utils import admin_login_required
 
 from app.services.chart_service import (
@@ -14,6 +14,7 @@ from models.user_health import UserHealth
 from models.posture_scan import PostureScan   # ← INI KUNCI
 from models.recomendation import Recommendations
 from config import db
+from sqlalchemy import text
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -123,12 +124,16 @@ def posture_history(user_id):
     if not user:
         return "User not found", 404
 
-    postures = (
-        UserHealth.query
-        .filter_by(user_id=user_id)
-        .order_by(UserHealth.created_at.desc())
-        .all()
-    )
+    # ⚠️ ADMIN TIDAK PERLU LIHAT POSTURE ADMIN
+    if user.role == "admin":
+        postures = []
+    else:
+        postures = (
+            PostureScan.query
+            .filter_by(user_id=user_id)
+            .order_by(PostureScan.created_at.desc())
+            .all()
+        )
 
     return render_template(
         "admin/posture_history.html",
@@ -147,14 +152,25 @@ def diet_history(user_id):
     if not user:
         return "User not found", 404
 
-    diets = (
-        Recommendations.query
-        .filter_by(user_id=user_id)
-        .order_by(Recommendations.created_at.desc())
-        .all()
-    )
+    # Admin tidak punya diet history
+    if user.role == "admin":
+        diets = []
+        calorie_trend = []
+    else:
+        diets = (
+            Recommendations.query
+            .filter_by(user_id=user_id)
+            .order_by(Recommendations.created_at.desc())
+            .all()
+        )
 
-    calorie_trend = get_user_calorie_trend(user_id)
+        calorie_trend = [
+            {
+                "date": d.record_date.strftime("%Y-%m-%d"),
+                "calories": d.calorie_intake
+            }
+            for d in diets if d.record_date and d.calorie_intake
+        ]
 
     return render_template(
         "admin/diet_history.html",
@@ -162,3 +178,26 @@ def diet_history(user_id):
         diets=diets,
         calorie_trend=calorie_trend,
     )
+
+    
+# =====================================================
+# ========== HEALTH ==============================    
+# =====================================================
+
+@admin_bp.route("/health", methods=["GET"])
+def health():
+    try:
+        # Cek koneksi ke database
+        db.session.execute(text("SELECT 1"))
+        return jsonify({
+            "status": "ok",
+            "message": "Database connection successful"
+        }), 200
+    except Exception as e:
+        # Tangani error koneksi
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    finally:
+        db.session.close()

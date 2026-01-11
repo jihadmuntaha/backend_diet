@@ -1,64 +1,87 @@
 {% extends "admin/layout.html" %}
-
-{% block title %}Diet History - Admin{% endblock %}
+{% block title %}Diet History{% endblock %}
 
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h3>Diet History - {{ session.admin_name }}</h3>
-  <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-secondary btn-sm">Back</a>
+  <div>
+    <h4 class="fw-bold mb-1">Diet History</h4>
+    <p class="text-muted mb-0">{{ user.fullname }}</p>
+  </div>
+
+  <a href="{{ url_for('admin.user_detail', user_id=user.id) }}"
+     class="btn btn-outline-secondary btn-sm">
+    Back
+  </a>
 </div>
 
 <!-- ===================== CHART ===================== -->
-<div class="row mb-4">
-  <div class="col-md-12">
-    <div class="card shadow-sm">
-      <div class="card-header">Calorie Intake per Day</div>
-      <div class="card-body">
-        <canvas id="calorieTrend"></canvas>
-      </div>
-    </div>
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body">
+    <h6 class="fw-semibold mb-3">Daily Calorie Intake</h6>
+    <canvas id="calorieTrend" height="90"></canvas>
   </div>
 </div>
 
 <!-- ===================== TABLE ===================== -->
-<div class="table-responsive">
-  <table class="table table-striped align-middle shadow-sm">
-    <thead class="table-dark">
-      <tr>
-        <th>Date</th>
-        <th>Calorie Intake</th>
-        <th>Target</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-
-    <tbody>
-    {% for d in diets %}
-      <tr>
-        <td>{{ d.record_date.isoformat() if d.record_date else '' }}</td>
-        <td>{{ d.calorie_intake or '-' }}</td>
-        <td>{{ d.daily_calorie_target or '-' }}</td>
-        <td>{{ d.notes or '' }}</td>
-      </tr>
-    {% else %}
-      <tr>
-        <td colspan="4" class="text-center text-muted">No diet records</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Calories</th>
+          <th>Target</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for d in diets %}
+        <tr>
+          <td>{{ d.record_date.strftime('%d %b %Y') if d.record_date else '-' }}</td>
+          <td>
+            <span class="fw-semibold">{{ d.calorie_intake or '-' }}</span>
+            kcal
+          </td>
+          <td>{{ d.daily_calorie_target or '-' }} kcal</td>
+          <td class="text-muted">{{ d.notes or '-' }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-4">
+            No diet records found
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<!-- ===================== DATA FOR CHART ===================== -->
-<!-- <script>
-  const calorieTrend = {{ calorie_trend | tojson }};
-</script> -->
+<!-- ===================== CHART DATA ===================== -->
 
- 
-
-<!-- ===================== CHART.JS + SCRIPT ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+  const ctx = document.getElementById("calorieTrend");
+
+  if (calorieTrend.length > 0) {
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: calorieTrend.map(d => d.date),
+        datasets: [{
+          data: calorieTrend.map(d => d.calories),
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+</script>
 
 {% endblock %}
