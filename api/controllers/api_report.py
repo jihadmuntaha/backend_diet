@@ -3,11 +3,12 @@ from sqlalchemy import func
 from models.posture_scan import PostureScan
 from models.user_health import UserHealth
 from config import db
+from flask_jwt_extended import get_jwt_identity
 
 
-def get_report(user_id):
+def get_report():
     try:
-        # 1. Ambil data berat badan 7 entri terakhir untuk grafik
+        user_id = get_jwt_identity()
         health_data = UserHealth.query.filter_by(user_id=user_id)\
             .order_by(UserHealth.created_at.asc()).limit(7).all()
         

@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from app.services.article_fetcher import fetch_all_articles
 from config import Config, db, mail, jwt, migrate, template_dir
 from dotenv import load_dotenv
 from app.auth.routes import auth_bp
@@ -43,7 +44,8 @@ app.register_blueprint(api_bp)
 app.register_blueprint(article_bp)
 
 with app.app_context():
-    db.create_all() 
+    fetch_all_articles()
+    db.create_all()
 
 if __name__ == "__main__":
     app.run()

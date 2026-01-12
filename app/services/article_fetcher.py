@@ -55,6 +55,15 @@ def fetch_all_articles():
                 title = a.get_text(strip=True)
                 link = a.get("href")
 
+                img_tag = a.find_previous("img") or a.find_next("img") or a.select_one("img")
+                found_img = None
+                if img_tag:
+                    found_img = img_tag.get("src") or img_tag.get("data-src")
+                
+                # Gabungkan jika path-nya relatif
+                if found_img:
+                    found_img = urljoin(base_url, found_img)
+
                 # basic validation
                 if not title or len(title) < 30:
                     continue
@@ -114,7 +123,7 @@ def fetch_all_articles():
                     title=title,
                     summary=None,
                     article_url=link,
-                    image_url=None,
+                    image_url=found_img,
                     source_name=source["source_name"],
                     category="diet",
                     published_at=datetime.utcnow(),
@@ -140,6 +149,17 @@ def scrape_article_content(url, source_name):
 
     soup = BeautifulSoup(r.text, "lxml")
 
+    # Gunakan og:image karena ini standar gambar artikel (BUKAN LOGO)
+    img_tag = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+    
+    image_url = img_tag["content"] if img_tag else None
+
+    # Proteksi: Jika yang didapat tetap .svg, coba cari tag <img> utama
+    if image_url and ".svg" in image_url:
+        first_img = soup.select_one("article img") # Cari gambar di dalam artikel
+        if first_img:
+            image_url = first_img.get("src")
+
     content_paragraphs = []
     image_url = None
     summary = None
@@ -151,6 +171,17 @@ def scrape_article_content(url, source_name):
 
     elif "detik.com" in url:
         content_paragraphs = soup.select("div.detail__body-text p")
+        img = soup.select_one("meta[property='og:image']")
+        desc = soup.select_one("meta[name='description']")
+
+    # TAMBAHKAN INI:
+    elif "alodokter.com" in url:
+        content_paragraphs = soup.select("div.post-content p")
+        img = soup.select_one("meta[property='og:image']")
+        desc = soup.select_one("meta[name='description']")
+
+    elif "hellosehat.com" in url:
+        content_paragraphs = soup.select("div.entry-content p")
         img = soup.select_one("meta[property='og:image']")
         desc = soup.select_one("meta[name='description']")
 

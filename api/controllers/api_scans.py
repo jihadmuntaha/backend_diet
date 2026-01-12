@@ -14,11 +14,10 @@ def api_scan():
     alergi = request.form.getlist('alergi')
     gender = request.form.get('gender')
     
-    # Ambil 3 file gambar
     files_data = {
         'depan': request.files.get('foto_depan'),
-        'samping_kanan': request.files.get('foto_kanan'), # Samakan dengan Flutter
-        'samping_kiri': request.files.get('foto_kiri')   # Samakan dengan Flutter
+        'samping_kanan': request.files.get('foto_kanan'), 
+        'samping_kiri': request.files.get('foto_kiri')  
     }
 
     for nama in alergi:

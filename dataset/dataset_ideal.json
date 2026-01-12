@@ -1,5 +1,5 @@
 {
-    "laki-laki_depan": {
+    "Laki-laki_depan": {
         "bahu_kiri": {
             "x": 632.7169990539551,
             "y": 216.8265438079834
@@ -33,7 +33,7 @@
             "y": 672.6387977600098
         }
     },
-    "laki-laki_samping_kanan": {
+    "Laki-laki_samping_kanan": {
         "bahu_kiri": {
             "x": 525.3992786407471,
             "y": 205.4677963256836
@@ -67,7 +67,7 @@
             "y": 674.4765472412109
         }
     },
-    "laki-laki_samping_kiri": {
+    "Laki-laki_samping_kiri": {
         "bahu_kiri": {
             "x": 586.5201683044434,
             "y": 206.77245140075684
@@ -101,7 +101,7 @@
             "y": 671.7255020141602
         }
     },
-    "perempuan_depan": {
+    "Perempuan_depan": {
         "bahu_kiri": {
             "x": 627.1498336791992,
             "y": 209.63566303253174
@@ -135,7 +135,7 @@
             "y": 669.8043251037598
         }
     },
-    "perempuan_samping_kanan": {
+    "Perempuan_samping_kanan": {
         "bahu_kiri": {
             "x": 477.9926452636719,
             "y": 236.3583526611328
@@ -169,7 +169,7 @@
             "y": 725.0772094726562
         }
     },
-    "perempuan_samping_kiri": {
+    "Perempuan_samping_kiri": {
         "bahu_kiri": {
             "x": 548.7168579101562,
             "y": 243.9619598388672

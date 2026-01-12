@@ -29,13 +29,13 @@ def api_login():
                 "jenis_kelamin": user.jenis_kelamin,
                 "email": user.email,
                 "role": user.role,
-                "photo": user.profile_picture
+                "profile_picture": user.profile_picture
                 }
             }), 200
     elif not user:
         return jsonify({"message": "Email tidak ditemukan, mohon periksa kembali email Anda"}), 404
     elif not user.check_password(data.get('password')):
-         return jsonify({"message": "Password salah, mohon periksa kembali password Anda"}), 401
+        return jsonify({"message": "Password salah, mohon periksa kembali password Anda"}), 401
     else:
         return jsonify({"message": "Login gagal mohon periksa kembali email dan password Anda"}), 400
         
@@ -107,7 +107,7 @@ def api_login_by_google():
                 "jenis_kelamin": user.jenis_kelamin,
                 "email": user.email,
                 "role": user.role,
-                "photo": user.profile_picture
+                "profile_picture": user.profile_picture
             }
         }), 200
 
