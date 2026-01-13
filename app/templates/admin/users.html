@@ -101,14 +101,14 @@
                 <i class="bi bi-eye"></i>
               </a>
 
-              <a href="{{ url_for('admin.posture_history', user_id=u.id) }}"
-                 class="btn btn-sm btn-outline-secondary">
+              <a href="{{ url_for('admin.posture_history_index', user_id=u.id) }}" 
+                class="btn btn-sm btn-outline-primary" title="Posture History">
                 <i class="bi bi-person-standing"></i>
               </a>
 
-              <a href="{{ url_for('admin.diet_history', user_id=u.id) }}"
-                 class="btn btn-sm btn-outline-warning">
-                <i class="bi bi-egg-fried"></i>
+              <a href="{{ url_for('admin.diet_history_index', user_id=u.id) }}" 
+                class="btn btn-sm btn-outline-primary" title="Diet History">
+              <i class="bi bi-egg-fried"></i>
               </a>
             </td>
           </tr>

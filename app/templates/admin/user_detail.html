@@ -178,12 +178,11 @@
       </p>
     {% else %}
       <div class="d-flex gap-2">
-        <a href="{{ url_for('admin.posture_history', user_id=user.id) }}"
-           class="btn btn-outline-secondary">
-          <i class="bi bi-person-standing"></i> Posture History
+        <a href="{{ url_for('admin.posture_history_index', user_id=user.id) }}" class="btn btn-primary">
+        View Posture History
         </a>
 
-        <a href="{{ url_for('admin.diet_history', user_id=user.id) }}"
+        <a href="{{ url_for('admin.diet_history_index', user_id=user.id) }}"
            class="btn btn-outline-warning">
           <i class="bi bi-egg-fried"></i> Diet History
         </a>

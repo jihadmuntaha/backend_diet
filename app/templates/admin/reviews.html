@@ -1,0 +1,137 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}User Reviews Feedback{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">User Reviews</h4>
+    <small class="text-muted">Feedback and ratings from our users</small>
+  </div>
+
+  <div class="d-flex gap-2">
+    <select class="form-select form-select-sm" id="filterRating" style="width: 140px;">
+        <option value="all">All Ratings</option>
+        <option value="5">5 Stars</option>
+        <option value="4">4 Stars</option>
+        <option value="3">3 Stars</option>
+        <option value="2">2 Stars</option>
+        <option value="1">1 Star</option>
+    </select>
+
+    <select class="form-select form-select-sm" id="sortOption" style="width: 180px;">
+        <option value="date_desc">Newest First</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="rate_desc">Highest Rating (5-1)</option>
+        <option value="rate_asc">Lowest Rating (1-5)</option>
+    </select>
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="reviewsTable">
+        <thead class="table-light">
+          <tr class="text-muted small">
+            <th class="ps-4">#</th>
+            <th>Date</th>
+            <th>Full Name</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="reviewsBody">
+        {% for r in reviews %}
+          <tr class="review-row" 
+              data-rating="{{ r.rating }}" 
+              data-timestamp="{{ r.created_at.timestamp() if r.created_at else 0 }}"
+              data-bs-toggle="modal" data-bs-target="#reviewDetailModal"
+              data-comment="{{ r.comment | e }}" data-user="{{ r.user_name }}"
+              style="cursor:pointer">
+            <td class="ps-4 fw-semibold index-column">{{ loop.index }}</td>
+            <td>{{ r.created_at.strftime('%d %b %Y %H:%M') if r.created_at else '-' }}</td>
+            <td class="fw-semibold text-primary">{{ r.user_name }}</td>
+            <td>
+              {% for i in range(5) %}
+                <i class="bi bi-star{{ '-fill text-warning' if i < r.rating else ' text-muted opacity-50' }}"></i>
+              {% endfor %}
+            </td>
+            <td class="text-truncate" style="max-width: 250px;">
+              {{ r.comment if r.comment else '<span class="text-muted small italic">No comment</span>' | safe }}
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary px-3">Detail</button>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="modalUserName">User Feedback</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <label class="text-muted small d-block mb-2">User Comment:</label>
+        <p id="modalComment" class="bg-light p-3 rounded border" style="white-space: pre-wrap;"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const filterRating = document.getElementById('filterRating');
+  const sortOption = document.getElementById('sortOption');
+  const reviewsBody = document.getElementById('reviewsBody');
+  const rows = Array.from(document.querySelectorAll('.review-row'));
+
+  function updateTable() {
+    const rVal = filterRating.value;
+    const sVal = sortOption.value;
+
+    let filtered = rows.filter(row => {
+      const match = (rVal === 'all' || row.getAttribute('data-rating') === rVal);
+      row.style.display = match ? '' : 'none';
+      return match;
+    });
+
+    filtered.sort((a, b) => {
+      const rA = parseInt(a.getAttribute('data-rating')), rB = parseInt(b.getAttribute('data-rating'));
+      const tA = parseFloat(a.getAttribute('data-timestamp')), tB = parseFloat(b.getAttribute('data-timestamp'));
+      if (sVal === 'date_desc') return tB - tA;
+      if (sVal === 'date_asc') return tA - tB;
+      if (sVal === 'rate_desc') return rB - rA;
+      if (sVal === 'rate_asc') return rA - rB;
+      return 0;
+    });
+
+    filtered.forEach((row, i) => {
+      reviewsBody.appendChild(row);
+      row.querySelector('.index-column').textContent = i + 1;
+    });
+  }
+
+  filterRating.addEventListener('change', updateTable);
+  sortOption.addEventListener('change', updateTable);
+
+  document.getElementById('reviewDetailModal').addEventListener('show.bs.modal', e => {
+    const row = e.relatedTarget.closest('tr');
+    document.getElementById('modalComment').textContent = row.getAttribute('data-comment') || 'No comment.';
+    document.getElementById('modalUserName').textContent = 'Feedback from ' + row.getAttribute('data-user');
+  });
+  
+  updateTable();
+</script>
+{% endblock %}

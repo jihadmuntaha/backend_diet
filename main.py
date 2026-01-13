@@ -10,6 +10,7 @@ from app.routes.chart_routes import chart_bp
 from app.routes.admin_routes import admin_bp
 from app.routes.chatbot_routes import chatbot_bp
 from app.routes.article_routes import article_bp
+from app.routes.user_reviews import user_reviews_bp
 from app.tasks.scheduler import start_scheduler
 from api.routes import api_detect_bp, api_auth_bp, api_bp
 from models.users import Users
@@ -41,6 +42,7 @@ app.register_blueprint(api_detect_bp)
 app.register_blueprint(api_auth_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(article_bp)
+app.register_blueprint(user_reviews_bp)
 
 with app.app_context():
     db.create_all() 
