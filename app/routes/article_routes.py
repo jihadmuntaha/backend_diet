@@ -33,17 +33,15 @@ def get_articles():
 def get_article_detail(article_id):
     article = Article.query.get_or_404(article_id)
 
-    # === LAZY FETCH CONTENT ===
     if not article.content:
         result = scrape_article_content(article.article_url, article.source_name)
+        
+        if result and result.get("content"):
+            article.content = result["content"]
+            article.image_url = article.image_url or result.get("image_url")
+            article.summary = article.summary or result.get("summary")
 
-    if result and result["content"]:
-        article.content = result["content"]
-        article.image_url = article.image_url or result["image_url"]
-        article.summary = article.summary or result["summary"]
-
-        db.session.commit()
-
+            db.session.commit()
 
     return jsonify({
         "id": article.id,

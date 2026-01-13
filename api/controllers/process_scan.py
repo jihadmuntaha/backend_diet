@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime
+from api.controllers.api_recommendation import get_combined_recommendation
 from config import db
 from models.user_health import UserHealth
 from models.posture_scan import PostureScan
@@ -140,49 +141,32 @@ def process_posture_scan(user_id, gender, tinggi, berat, files, db_ideal):
     db.session.add(new_scan)
     db.session.flush() 
 
-    # 4. Generate Rekomendasi
+# --- (Bagian 4: Generate Rekomendasi) ---
     user_alergi = Alergi.query.filter_by(user_id=user_id).all()
     alergi_names = [a.nama_alergi for a in user_alergi]
     
-    # Kirim status final ke logika diet
-    status_final_dict = {
-        'perut': perut_stat,
-        'lengan': lengan_stat,
-        'paha': paha_stat
-    }
+    status_final_dict = {'perut': perut_stat, 'lengan': lengan_stat, 'paha': paha_stat}
     
-    rekom_makanan, rekom_olahraga = generate_diet_logic(status_final_dict, bmi_value, alergi_names)
+    # Ambil hasil dari fungsi Excel
+    res = get_combined_recommendation(status_final_dict, bmi_value, alergi_names)
 
+    # SIMPAN KE DATABASE SEBAGAI STRING JSON
     new_recom = Recommendations(
         user_id=user_id,
         scan_id=new_scan.id,
-        rekomendasi_makanan=rekom_makanan,
-        rekomendasi_olahraga=rekom_olahraga,
+        rekomendasi_makanan=json.dumps(res["makanan"]), # PENTING: dump ke string
+        rekomendasi_olahraga=json.dumps(res["olahraga"]),
         created_at=datetime.utcnow()
     )
     db.session.add(new_recom)
     db.session.commit()
 
     return {
+        "user_id": user_id,
         "bmi": round(bmi_value, 2),
         "posture": status_final_dict,
-        "rekomendasi": {"makanan": rekom_makanan, "olahraga": rekom_olahraga}
+        "rekomendasi": {
+            "makanan": res["makanan"], 
+            "olahraga": res["olahraga"]
+        }
     }
-
-def generate_diet_logic(status_final, bmi, alergi):
-    makanan = "Konsumsi protein seimbang dan sayuran."
-    olahraga = "Lakukan aktivitas fisik ringan seperti jalan kaki."
-    
-    # Contoh logika: Jika perut Overweight
-    if status_final['perut'] == "OVERWEIGHT" or bmi > 25:
-        makanan = "Kurangi asupan karbohidrat dan gula, lakukan defisit kalori."
-        olahraga = "Fokus pada olahraga kardio dan plank untuk mengecilkan perut."
-        
-    # Logika Alergi
-    alergi_lower = [a.lower() for a in alergi]
-    if "babi" in alergi_lower:
-        makanan += " Pilih sumber protein halal seperti ayam, sapi, atau ikan."
-    if "udang" in alergi_lower or "seafood" in alergi_lower:
-        makanan += " Ganti sumber protein laut dengan protein nabati seperti tempe."
-        
-    return makanan, olahraga
