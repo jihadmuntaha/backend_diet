@@ -8,7 +8,7 @@ from api.controllers.auth.api_login import api_login, api_login_by_google
 from api.controllers.auth.api_forgot_password import api_forgot_password ,api_reset_password
 from api.controllers.api_history import get_history
 from api.controllers.api_update_profile import get_image, get_user_profile, update_profile
-from api.controllers.feedback import post_feedback
+from api.controllers.feedback import feedback
 
 api_auth_bp = Blueprint('api_auth', __name__, url_prefix='/api/auth')
 
@@ -63,8 +63,9 @@ def api_get_user_profile():
     return get_user_profile()
 
 @api_bp.route('/feedback', methods=['POST'])
+@jwt_required()
 def api_post_feedback():
-    return post_feedback()
+    return feedback()
 
 @api_bp.route('/latest_recommendation', methods=['GET'])
 @jwt_required()
