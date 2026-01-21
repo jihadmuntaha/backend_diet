@@ -31,6 +31,7 @@ def get_feedbacks():
             "user_id": r.user_id,
             "rating": r.rating,
             "comment": r.comment,
+            "sentiment" : r.sentiment,
             "created_at": r.created_at.isoformat()
         } for r in reviews
     ]

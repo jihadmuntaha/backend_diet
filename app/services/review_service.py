@@ -25,13 +25,14 @@ def get_review_statistics():
         "total_reviews": sum(dist_dict.values())
     }
 
-def create_new_review(user_id, rating, comment):
+def create_new_review(user_id, rating, comment, sentiment):
     """
     Logika menyimpan review baru
     """
     new_review = UserReview(
         user_id=user_id,
         rating=rating,
+        sentiment=sentiment,
         comment=comment
     )
     db.session.add(new_review)

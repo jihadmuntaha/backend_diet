@@ -43,8 +43,8 @@
             <th>Full Name</th>
             <th>Rating</th>
             <th>Comment</th>
-            <th>Hasil</th>
-            <th class="text-center">Action</th>
+            <th>Sentiment</th>
+            <th class="text-center">Action</th>S</th
           </tr>
         </thead>
         <tbody id="reviewsBody">
@@ -65,6 +65,9 @@
             </td>
             <td class="text-truncate" style="max-width: 250px;">
               {{ r.comment if r.comment else '<span class="text-muted small italic">No comment</span>' | safe }}
+            </td>
+            <td>
+              {{r.sentiment}}
             </td>
             <td class="text-center">
               <button class="btn btn-sm btn-outline-primary px-3">Detail</button>
