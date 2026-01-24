@@ -10,7 +10,7 @@ from api.controllers.api_history import get_history
 from api.controllers.api_update_profile import get_image, get_user_profile, update_profile
 from api.controllers.chatbot import chat
 from api.controllers.feedback import feedback
-
+from api.controllers.auth.api_change_password import handle_change_password
 api_auth_bp = Blueprint('api_auth', __name__, url_prefix='/api/auth')
 
 @api_auth_bp.route('/register', methods=['POST', 'GET'])
@@ -28,6 +28,11 @@ def login_by_google():
 @api_auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     return api_forgot_password()
+
+@api_auth_bp.route('/change-password', methods=['POST'])
+@jwt_required()
+def change_password():
+    return handle_change_password()
 
 @api_auth_bp.route('/reset-password', methods=['POST'])
 def reset_password():
@@ -75,4 +80,4 @@ def api_get_latest_recommendation():
 
 @api_bp.route('/chatbot', methods=['GET', 'POST'])
 def api_chatbot():
-    return chat()
+    return chat()   

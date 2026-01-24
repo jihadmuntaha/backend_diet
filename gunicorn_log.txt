@@ -1,0 +1,1 @@
+nohup: failed to run command '/home/Masjiii/my-backend/venv/bin/gunicorn': No such file or directory

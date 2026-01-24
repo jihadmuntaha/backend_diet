@@ -96,13 +96,13 @@
                     <div class="col-md-6">
                         <div class="h-100 p-3 bg-light rounded border-start border-4 border-success">
                             <h6 class="fw-bold text-success"><i class="bi bi-apple me-2"></i>Food & Nutrition</h6>
-                            <p id="m-food" class="mb-0 small" style="white-space: pre-wrap;"></p>
+                            <div id="m-food-list" class="small"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="h-100 p-3 bg-light rounded border-start border-4 border-primary">
                             <h6 class="fw-bold text-primary"><i class="bi bi-bicycle me-2"></i>Exercise & Activity</h6>
-                            <p id="m-exercise" class="mb-0 small" style="white-space: pre-wrap;"></p>
+                            <div id="m-exercise-list" class="small"></div>
                         </div>
                     </div>
                 </div>
@@ -116,9 +116,42 @@
     dModal.addEventListener('show.bs.modal', event => {
         const row = event.relatedTarget.closest('tr');
         
-        document.getElementById('m-date').textContent = row.getAttribute('data-date');
-        document.getElementById('m-food').textContent = row.getAttribute('data-food');
-        document.getElementById('m-exercise').textContent = row.getAttribute('data-exercise');
+        // Ambil data dari atribut baris
+        const date = row.getAttribute('data-date');
+        const foodRaw = row.getAttribute('data-food');
+        const exerciseRaw = row.getAttribute('data-exercise');
+
+        document.getElementById('m-date').textContent = date;
+
+        // Fungsi pembantu untuk membuat list item
+        const renderList = (rawJson, containerId, type) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Bersihkan isi lama
+            
+            try {
+                // Parse string JSON menjadi array
+                const items = JSON.parse(rawJson.replace(/'/g, '"')); 
+                
+                items.forEach(item => {
+                    let content = '';
+                    if(type === 'food') {
+                        content = `<strong>${item.nama}</strong><br><span class="text-muted">${item.waktu}: ${item.jam}</span>`;
+                    } else {
+                        content = `<strong>${item.gerakan}</strong> (${item.area})<br><span class="text-muted">${item.durasi} • ${item.jam}</span>`;
+                    }
+                    
+                    const div = document.createElement('div');
+                    div.className = 'mb-2 p-2 border-bottom';
+                    div.innerHTML = content;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                container.textContent = rawJson; // Tampilkan mentah jika parse gagal
+            }
+        };
+
+        renderList(foodRaw, 'm-food-list', 'food');
+        renderList(exerciseRaw, 'm-exercise-list', 'exercise');
     });
 </script>
 {% endblock %}

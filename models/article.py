@@ -5,7 +5,7 @@ class Article(db.Model):
     __tablename__ = "articles"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.Text, nullable=False)
     summary = db.Column(db.Text)
     content = db.Column(db.Text)
 

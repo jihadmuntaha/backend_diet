@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request, session
+from flask import Blueprint, render_template, jsonify, request, session, redirect, url_for, flash
 from app.auth.utils import admin_login_required
 
 from app.services.chart_service import (
@@ -57,6 +57,67 @@ def dashboard():
         posture_scores=posture_scores,
         chart_review_data=chart_review_data
     )
+
+
+
+# =====================================================
+# ========== USER MANAGEMENT ==========================
+# =====================================================
+
+@admin_bp.route('/users')
+def manage_users():
+    # Mengambil parameter filter
+    q = request.args.get('q', '')
+    role_filter = request.args.get('role', '')
+    
+    # Query dasar menggunakan SQLAlchemy ORM
+    query = Users.query
+
+    if q:
+        query = query.filter((Users.fullname.like(f'%{q}%')) | (Users.email.like(f'%{q}%')))
+
+    if role_filter:
+        query = query.filter(Users.role == role_filter)
+
+    # Mengambil semua hasil
+    users = query.all()
+    
+    return render_template('admin/users.html', users=users, q=q, role=role_filter)
+
+@admin_bp.route('/users/update', methods=['POST'])
+def update_user():
+    user_id = request.form.get('id')
+    # Ambil data dari form modal
+    new_fullname = request.form.get('fullname')
+    new_role = request.form.get('role')
+    new_gender = request.form.get('gender')
+
+    # Cari user berdasarkan ID menggunakan SQLAlchemy
+    user = Users.query.get(user_id)
+    
+    if user:
+        user.fullname = new_fullname
+        user.role = new_role
+        db.session.commit() # Simpan ke database
+        flash("Data user berhasil diperbarui!", "success")
+    else:
+        flash("User tidak ditemukan!", "danger")
+        
+    return redirect(url_for('admin.manage_users'))
+
+@admin_bp.route('/users/delete/<int:id>', methods=['POST'])
+def delete_user(id):
+    user = Users.query.get(id)
+    if user:
+        db.session.delete(user) # Hapus user
+        db.session.commit()
+        flash("User telah dihapus.", "warning")
+    else:
+        flash("User tidak ditemukan.", "danger")
+        
+    return redirect(url_for('admin.manage_users'))
+
+
 
 # =====================================================
 # ========== USERS LIST ===============================

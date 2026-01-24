@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- ===================== PAGE HEADER ===================== -->
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h4 class="fw-bold mb-1">Users</h4>
@@ -11,11 +10,21 @@
   </div>
 </div>
 
-<!-- ===================== FILTER ===================== -->
+{# Notifikasi Flash Messages #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
 <div class="card shadow-sm border-0 mb-4">
   <div class="card-body">
     <form class="row g-3 align-items-end" method="get">
-
       <div class="col-md-4">
         <label class="form-label small text-muted">Search</label>
         <input
@@ -23,7 +32,7 @@
           name="q"
           class="form-control"
           placeholder="Search fullname or email"
-          value="{{ q }}"
+          value="{{ q or '' }}"
         >
       </div>
 
@@ -37,19 +46,16 @@
       </div>
 
       <div class="col-md-2">
-        <button class="btn btn-primary w-100">
+        <button type="submit" class="btn btn-primary w-100">
           <i class="bi bi-filter"></i> Filter
         </button>
       </div>
-
     </form>
   </div>
 </div>
 
-<!-- ===================== USERS TABLE ===================== -->
 <div class="card shadow-sm border-0">
   <div class="card-body p-0">
-
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
@@ -59,6 +65,7 @@
             <th>Role</th>
             <th>Gender</th>
             <th>Joined</th>
+            <th class="text-center">Health Data</th>
             <th class="text-end">Action</th>
           </tr>
         </thead>
@@ -66,16 +73,13 @@
         <tbody>
         {% for u in users %}
           <tr>
-            <!-- ID -->
-            <td class="fw-semibold">{{ u.id }}</td>
+            <td class="fw-semibold text-primary">#{{ u.id }}</td>
 
-            <!-- USER INFO -->
             <td>
               <div class="fw-semibold">{{ u.fullname }}</div>
               <div class="small text-muted">{{ u.email }}</div>
             </td>
 
-            <!-- ROLE -->
             <td>
               {% if u.role == 'admin' %}
                 <span class="badge bg-danger">Admin</span>
@@ -84,47 +88,152 @@
               {% endif %}
             </td>
 
-            <!-- GENDER -->
             <td class="small">
-              {{ u.jenis_kelamin|capitalize }}
+              {{ u.jenis_kelamin|capitalize if u.jenis_kelamin else '-' }}
             </td>
 
-            <!-- JOINED -->
             <td class="small text-muted">
               {{ u.created_at.strftime('%d %b %Y') if u.created_at else '-' }}
             </td>
 
-            <!-- ACTION -->
+            <td class="text-center">
+              <div class="btn-group">
+                <a href="{{ url_for('admin.posture_history_index', user_id=u.id) }}" 
+                   class="btn btn-sm btn-outline-primary" title="Posture History">
+                  <i class="bi bi-person-standing"></i>
+                </a>
+
+                <a href="{{ url_for('admin.diet_history_index', user_id=u.id) }}" 
+                   class="btn btn-sm btn-outline-primary" title="Diet History">
+                  <i class="bi bi-egg-fried"></i>
+                </a>
+              </div>
+            </td>
+
             <td class="text-end">
-              <a href="{{ url_for('admin.user_detail', user_id=u.id) }}"
-                 class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-eye"></i>
-              </a>
+              <div class="btn-group">
+                <a href="{{ url_for('admin.user_detail', user_id=u.id) }}"
+                   class="btn btn-sm btn-outline-primary" title="View Detail">
+                  <i class="bi bi-eye"></i>
+                </a>
 
-              <a href="{{ url_for('admin.posture_history_index', user_id=u.id) }}" 
-                class="btn btn-sm btn-outline-primary" title="Posture History">
-                <i class="bi bi-person-standing"></i>
-              </a>
+                <button type="button" class="btn btn-sm btn-outline-warning" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalEditUser"
+                        data-id="{{ u.id }}"
+                        data-fullname="{{ u.fullname }}"
+                        data-email="{{ u.email }}"
+                        data-role="{{ u.role }}"
+                        data-gender="{{ u.jenis_kelamin }}"
+                        title="Edit User">
+                  <i class="bi bi-pencil"></i>
+                </button>
 
-              <a href="{{ url_for('admin.diet_history_index', user_id=u.id) }}" 
-                class="btn btn-sm btn-outline-primary" title="Diet History">
-              <i class="bi bi-egg-fried"></i>
-              </a>
+                <form action="{{ url_for('admin.delete_user', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete User">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
         {% else %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-4">
+            <td colspan="7" class="text-center text-muted py-5">
+              <i class="bi bi-people mb-2 d-block fs-2"></i>
               No users found
             </td>
           </tr>
         {% endfor %}
         </tbody>
-
       </table>
     </div>
-
   </div>
 </div>
+
+<div class="modal fade" id="modalEditUser" tabindex="-1" aria-labelledby="modalEditUserLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form action="{{ url_for('admin.update_user') }}" method="POST">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title fw-bold" id="modalEditUserLabel">
+            <i class="bi bi-pencil-square me-2"></i>Edit User Info
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit-id">
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Full Name</label>
+            <input type="text" name="fullname" id="edit-fullname" class="form-control" placeholder="Enter full name" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Email Address</label>
+            <input type="email" id="edit-email" class="form-control bg-light" readonly>
+            <div class="form-text">Email cannot be modified for account integrity.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Assign Role</label>
+            <select name="role" id="edit-role" class="form-select">
+              <option value="user">User (Customer)</option>
+              <option value="admin">Admin (Staff)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Gender</label>
+            <select name="jenis_kelamin" id="edit-gender" class="form-select" required>
+              <option value="pria">Laki-Laki</option>
+              <option value="wanita">Perempuan</option>
+          </select>
+        </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning px-4 fw-bold">Update Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Admin User Script Loaded..."); // Mengecek apakah script ini jalan
+
+    var modalEditUser = document.getElementById('modalEditUser');
+    
+    if (modalEditUser) {
+        modalEditUser.addEventListener('show.bs.modal', function (event) {
+            console.log("Modal is opening!"); // Mengecek apakah event modal terpancing
+
+            var button = event.relatedTarget; // Tombol yang memicu modal
+            
+            // Ambil data dari atribut data-* di tombol
+            var id = button.getAttribute('data-id');
+            var fullname = button.getAttribute('data-fullname');
+            var email = button.getAttribute('data-email');
+            var role = button.getAttribute('data-role');
+
+            console.log("Data captured:", {id, fullname, email, role}); // Melihat data yang ditangkap
+
+            // Masukkan ke input modal (Pastikan ID input di modal sesuai)
+            try {
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-fullname').value = fullname;
+                document.getElementById('edit-email').value = email;
+                document.getElementById('edit-role').value = role;
+                console.log("Fields updated successfully.");
+            } catch (err) {
+                console.error("Error updating fields:", err);
+            }
+        });
+    } else {
+        console.error("Error: Element with ID 'modalEditUser' not found in this page.");
+    }
+});
+</script>
 
 {% endblock %}

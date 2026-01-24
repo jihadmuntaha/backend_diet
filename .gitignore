@@ -4,7 +4,7 @@ __pycache__/
 *.pyo
 
 # ===== Virtual Environment =====
-venv/
+venv311/
 .env
 
 # ===== Flask =====
@@ -29,3 +29,5 @@ Thumbs.db
 client_secret.json
 
 uploads/
+
+.txt

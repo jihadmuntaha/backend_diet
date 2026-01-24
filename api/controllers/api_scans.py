@@ -20,17 +20,12 @@ def api_scan():
         'samping_kiri': request.files.get('foto_kiri')  
     }
 
-    for nama in alergi:
-            existing_alergi = Alergi.query.filter_by(user_id=user_id, nama_alergi=nama).first()
-            
-            if not existing_alergi:
-                baru = Alergi(
-                    user_id=user_id, 
-                    nama_alergi=nama,
-                    created_at=datetime.utcnow()
-                )
-                db.session.add(baru)
-        
+    baru = Alergi(
+        user_id=user_id, 
+        nama_alergi=alergi,
+        created_at=datetime.utcnow()
+    )
+    db.session.add(baru)
     db.session.commit()
 
     try:

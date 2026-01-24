@@ -2,9 +2,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+# Gunakan cara paling standar
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=True, model_complexity=2, min_detection_confidence=0.5)
-
+    
 def get_landmarks(img_path):
     img = cv2.imread(img_path)
     if img is None: return None

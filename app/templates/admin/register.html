@@ -2,35 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Admin Register</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Registration | Diet Web</title>
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
     body {
       background: linear-gradient(135deg, #0d6efd, #4f8cff);
       min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .auth-card {
-      border-radius: 16px;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .auth-icon {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       background: #0d6efd;
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
+      font-size: 2.5rem;
       margin: -60px auto 20px;
+      border: 5px solid white;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-right: none;
+    }
+
+    .form-control, .form-select {
+      border-left: none;
+    }
+
+    .form-control:focus, .form-select:focus {
+      box-shadow: none;
+      border-color: #dee2e6;
+    }
+
+    .btn-primary {
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
     }
   </style>
 </head>
@@ -39,108 +67,111 @@
 
 <div class="container">
   <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
+    <div class="col-md-8 col-lg-5 col-xl-4">
 
-      <div class="card shadow auth-card p-4">
+      <div class="card auth-card p-4 mt-5">
 
-        <!-- ICON -->
-        <div class="auth-icon">
+        <div class="auth-icon shadow">
           <i class="bi bi-shield-lock-fill"></i>
         </div>
 
-        <h4 class="text-center fw-bold mb-1">Admin Registration</h4>
-        <p class="text-center text-muted mb-4">
-          Create an admin account for system monitoring
+        <h3 class="text-center fw-bold mb-1">Admin Registration</h3>
+        <p class="text-center text-muted mb-4 small">
+          Create an administrative account for system management
         </p>
 
-        {% if error %}
-          <div class="alert alert-danger d-flex align-items-center gap-2">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <div>{{ error }}</div>
-          </div>
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                <i class="bi {{ 'bi-exclamation-triangle-fill' if category == 'error' else 'bi-check-circle-fill' }}"></i>
+                <div class="small">{{ message }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-        <form method="post">
-
-          <!-- FULL NAME -->
+        <form method="POST" id="registerForm">
+          
           <div class="mb-3">
-            <label class="form-label">Full Name</label>
+            <label class="form-label small fw-bold">Full Name</label>
             <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-person-fill"></i>
-              </span>
-              <input type="text" name="fullname" class="form-control" required>
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" name="fullname" class="form-control" placeholder="Enter full name" required>
             </div>
           </div>
 
-          <!-- GENDER -->
           <div class="mb-3">
-            <label class="form-label">Gender</label>
+            <label class="form-label small fw-bold">Gender</label>
             <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-gender-ambiguous"></i>
-              </span>
+              <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
               <select name="jenis_kelamin" class="form-select" required>
-                <option value="">Select gender</option>
+                <option value="" disabled selected>Select gender</option>
                 <option value="laki-laki">Laki-laki</option>
                 <option value="perempuan">Perempuan</option>
               </select>
             </div>
           </div>
 
-          <!-- EMAIL -->
           <div class="mb-3">
-            <label class="form-label">Email</label>
+            <label class="form-label small fw-bold">Email Address</label>
             <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-envelope-fill"></i>
-              </span>
-              <input type="email" name="email" class="form-control" required>
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" name="email" class="form-control" placeholder="admin@example.com" required>
             </div>
           </div>
 
-          <!-- PASSWORD -->
           <div class="mb-3">
-            <label class="form-label">Password</label>
+            <label class="form-label small fw-bold">Password</label>
             <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-lock-fill"></i>
-              </span>
-              <input type="password" name="password" class="form-control" required>
+              <span class="input-group-text"><i class="bi bi-key"></i></span>
+              <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" minlength="8" required>
             </div>
           </div>
 
-          <!-- ADMIN SECRET -->
           <div class="mb-4">
-            <label class="form-label">Admin Secret</label>
-            <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-key-fill"></i>
-              </span>
-              <input type="password" name="secret" class="form-control" required>
+            <label class="form-label small fw-bold text-primary">Admin Secret Key</label>
+            <div class="input-group border border-primary rounded-start rounded-end">
+              <span class="input-group-text border-0"><i class="bi bi-lock"></i></span>
+              <input type="password" name="secret" class="form-control border-0" placeholder="Enter system secret" required>
             </div>
-            <div class="form-text">
-              This field is required for admin-only registration
-            </div>
+            <div class="form-text x-small">Hanya admin yang memiliki kunci ini yang dapat mendaftar.</div>
           </div>
 
-          <button class="btn btn-primary w-100 py-2">
-            <i class="bi bi-person-plus-fill me-1"></i>
-            Register Admin
+          <button type="submit" class="btn btn-primary w-100" id="submitBtn">
+            <i class="bi bi-person-plus-fill me-2"></i>Register Admin Account
           </button>
         </form>
 
         <div class="text-center mt-4">
-          <a href="{{ url_for('auth.admin_login_local') }}" class="text-decoration-none">
-            <i class="bi bi-arrow-left"></i> Back to Login
+          <p class="small text-muted mb-0">Already have an admin account?</p>
+          <a href="/" class="text-decoration-none fw-bold">
+             Log In Here
           </a>
         </div>
 
       </div>
+      
+      <p class="text-center text-white-50 mt-4 small">
+        &copy; 2026 Diet Web System Monitoring
+      </p>
 
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const form = document.getElementById('registerForm');
+  const btn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', function() {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+  });
+</script>
 
 </body>
 </html>

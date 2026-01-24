@@ -20,10 +20,15 @@ from models.user_health import UserHealth
 from models.posture_scan import PostureScan
 from models.recomendation import Recommendations
 from models.user_reviews import UserReview
+from werkzeug.middleware.proxy_fix import ProxyFix
+from datetime import timedelta
 
 load_dotenv()
 app = Flask(__name__, template_folder=template_dir)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config.from_object(Config)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
+
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 db.init_app(app)
@@ -32,13 +37,13 @@ jwt.init_app(app)
 migrate.init_app(app, db)
 start_scheduler()
 
+app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(posture_bp)
 app.register_blueprint(diet_bp)
 app.register_blueprint(chart_bp)
-app.register_blueprint(admin_bp)
 app.register_blueprint(api_detect_bp)
 app.register_blueprint(api_auth_bp)
 app.register_blueprint(api_bp)
@@ -50,4 +55,5 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0', port=5000, debug=False,
+        use_reloader=False)
